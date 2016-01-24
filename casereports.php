@@ -10,10 +10,9 @@ require_once 'casereports.civix.php';
  */
 function casereports_civicrm_post($op, $objectName, $objectId, &$objectRef) {
   if ($objectName == 'Activity') {
-    CRM_Core_Error::debug('op', $op);
-    CRM_Core_Error::debug('objectId', $objectId);
-    CRM_Core_Error::debug('objectRef', $objectRef);
-    exit();
+    if (isset($objectRef->case_id) && !empty($objectRef->case_id)) {
+      CRM_Casereports_Activity::post($op, $objectRef);
+    }
   }
 }
 /**

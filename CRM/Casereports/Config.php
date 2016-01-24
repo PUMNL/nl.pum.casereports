@@ -4,7 +4,7 @@
  * for PUM Case Reports
  *
  * @author Erik Hommel (CiviCooP) <erik.hommel@civicoop.org>
- * @date 5 Nov 2015
+ * @date 22 Jan 2016
  * @license AGPL-3.0
  */
 
@@ -14,9 +14,9 @@ class CRM_Casereports_Config {
    */
   static private $_singleton = NULL;
 
-  protected $_maAcceptActivityId = NULL;
-  protected $_maRejectActivityId = NULL;
-  protected $_maBriefingActivityId = NULL;
+  protected $_maAcceptActivityTypeId = NULL;
+  protected $_maRejectActivityTypeId = NULL;
+  protected $_maBriefingActivityTypeId = NULL;
   protected $_maAcceptCustomGroup = array();
 
   /**
@@ -24,13 +24,23 @@ class CRM_Casereports_Config {
    */
   function __construct() {
     $this->setActivityTypes(array(
-      '_maAcceptActivityId' => 'Accept Main Activity Proposal',
-      '_maRejectActivityId' => 'Reject Main Activity Proposal',
-      '_maBriefingActivityId' => 'Briefing Expert'
+      '_maAcceptActivityTypeId' => 'Accept Main Activity Proposal',
+      '_maRejectActivityTypeId' => 'Reject Main Activity Proposal',
+      '_maBriefingActivityTypeId' => 'Briefing Expert'
     ));
     $this->setCustomGroups(array(
      '_maAcceptCustomGroup' => 'Add_Keyqualifications'
     ));
+  }
+
+  /**
+   * Getter for Briefing Expert activity id
+   *
+   * @return int
+   * @access public
+   */
+  public function getBriefingActivityTypeId() {
+    return $this->_maBriefingActivityTypeId;
   }
 
   /**
@@ -39,8 +49,8 @@ class CRM_Casereports_Config {
    * @return int
    * @access public
    */
-  public function getMaRejectActivityId() {
-    return $this->_maRejectActivityId;
+  public function getMaRejectActivityTypeId() {
+    return $this->_maRejectActivityTypeId;
   }
 
   /**
@@ -49,8 +59,22 @@ class CRM_Casereports_Config {
    * @return int
    * @access public
    */
-  public function getMaAcceptActivityId() {
-    return $this->_maAcceptActivityId;
+  public function getMaAcceptActivityTypeId() {
+    return $this->_maAcceptActivityTypeId;
+  }
+  /**
+   * Getter for Accept Main Activity Proposal Custom Group
+   *
+   * @param $key
+   * @return array
+   * @access public
+   */
+  public function getMaAcceptCustomGroup($key = null) {
+    if (empty($key) || !isset($this->_maAcceptCustomGroup[$key])) {
+      return $this->_maAcceptCustomGroup;
+    } else {
+      return $this->_maAcceptCustomGroup[$key];
+    }
   }
 
   /**
@@ -66,6 +90,7 @@ class CRM_Casereports_Config {
         try {
           $customFields = civicrm_api3('CustomField', 'Get', array('custom_group_id' => $customGroup['id']));
           $customGroup['custom_fields'] = $customFields['values'];
+          $this->$property = $customGroup;
         } catch (CiviCRM_API3_Exception $ex) {}
       } catch (CiviCRM_API3_Exception $ex) {
         throw new Exception('Could not find a custom group with name '.$customGroupName

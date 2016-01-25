@@ -1,207 +1,311 @@
 <?php
 
+/*
+ +--------------------------------------------------------------------+
+ | CiviCRM version 4.4                                                |
+ +--------------------------------------------------------------------+
+ | Copyright CiviCRM LLC (c) 2004-2013                                |
+ +--------------------------------------------------------------------+
+ | This file is a part of CiviCRM.                                    |
+ |                                                                    |
+ | CiviCRM is free software; you can copy, modify, and distribute it  |
+ | under the terms of the GNU Affero General Public License           |
+ | Version 3, 19 November 2007 and the CiviCRM Licensing Exception.   |
+ |                                                                    |
+ | CiviCRM is distributed in the hope that it will be useful, but     |
+ | WITHOUT ANY WARRANTY; without even the implied warranty of         |
+ | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.               |
+ | See the GNU Affero General Public License for more details.        |
+ |                                                                    |
+ | You should have received a copy of the GNU Affero General Public   |
+ | License and the CiviCRM Licensing Exception along                  |
+ | with this program; if not, contact CiviCRM LLC                     |
+ | at info[AT]civicrm[DOT]org. If you have questions about the        |
+ | GNU Affero General Public License or the licensing of CiviCRM,     |
+ | see the CiviCRM license FAQ at http://civicrm.org/licensing        |
+ +--------------------------------------------------------------------+
+*/
+
+/**
+ *
+ * @package CRM
+ * @copyright CiviCRM LLC (c) 2004-2013
+ * $Id$
+ *
+ */
 class CRM_Casereports_Form_Report_MainActivities extends CRM_Report_Form {
 
-  protected $_addressField = FALSE;
-
-  protected $_emailField = FALSE;
-
   protected $_summary = NULL;
+  protected $_add2groupSupported = FALSE;
+  protected $_customGroupExtends = array();
+  protected $_userSelectList = array();
+  protected $_caseTypes = array();
+  protected $_caseStatus = array();
+  protected $_deletedLabels = array();
 
-  protected $_customGroupExtends = array('Membership');
-  protected $_customGroupGroupBy = FALSE; function __construct() {
+  /**
+   * Constructor method
+   */
+  function __construct() {
+    $this->_caseTypes    = CRM_Case_PseudoConstant::caseType();
+    $this->_caseStatus = CRM_Case_PseudoConstant::caseStatus();
+    $this->setUserSelectList();
+
+    $this->_deletedLabels = array('' => ts('- select -'), 0 => ts('No'), 1 => ts('Yes'));
+
     $this->_columns = array(
-      'civicrm_contact' => array(
-        'dao' => 'CRM_Contact_DAO_Contact',
-        'fields' => array(
-          'sort_name' => array(
-            'title' => ts('Contact Name'),
-            'required' => TRUE,
-            'default' => TRUE,
-            'no_repeat' => TRUE,
+      'pum_main' =>
+        array(
+          'fields' =>
+            array(
+              'case_id' =>
+                array(
+                  'no_display' => TRUE,
+                  'required' => TRUE,
+                ),
+              'customer_name' =>
+                array(
+                  'name' => 'customer_name',
+                  'title' => ts('Client'),
+                  'required' => TRUE,
+                ),
+              'customer_id' =>
+                array(
+                  'name' => 'customer_id',
+                  'no_display' => TRUE,
+                  'required' => TRUE
+                ),
+              'country_name' =>
+                array(
+                  'name' => 'country_name',
+                  'title' => ts('Country'),
+                  'default' => TRUE,
+                ),
+              'representative' =>
+                array(
+                  'name' => 'representative',
+                  'title' => ts('Representative'),
+                  'default' => TRUE,
+                ),
+              'representative_id' =>
+                array(
+                  'name' => 'representative_id',
+                  'no_display' => TRUE,
+                  'required' => TRUE
+                ),
+              'case_type' =>
+                array(
+                  'name' => 'case_type_id',
+                  'title' => ts('Case Type'),
+                  'default' => TRUE,
+                ),
+              'case_status' =>
+                array(
+                  'name' => 'case_status_id',
+                  'title' => ts('Case Status'),
+                  'default' => TRUE,
+                ),
+              'expert' =>
+                array(
+                  'name' => 'expert',
+                  'title' => ts('Expert'),
+                  'default' => TRUE,
+                ),
+              'expert_id' =>
+                array(
+                  'name' => 'expert_id',
+                  'no_display' => TRUE,
+                  'required' => TRUE
+                ),
+              'start_date' =>
+                array(
+                  'name' => 'start_date',
+                  'title' => ts('Activity Start Date'),
+                  'default' => TRUE,
+                ),
+              'end_date' =>
+                array(
+                  'name' => 'end_date',
+                  'title' => ts('Activity End Date'),
+                  'default' => TRUE,
+                ),
+              'ma_expert_approval' =>
+                array(
+                  'name' => 'ma_expert_approval',
+                  'title' => ts('Expert approves Main. Act'),
+                  'default' => TRUE
+                ),
+              'pq_approved_sc' =>
+                array(
+                  'name' => 'pq_approved_sc',
+                  'title' => ts('PQ approved by SC'),
+                  'default' => TRUE
+                ),
+              'pq_approved_cc' =>
+                array(
+                  'name' => 'pq_approved_cc',
+                  'title' => ts('PQ approved by CC'),
+                  'default' => TRUE
+                ),
+              'cust_approves_expert' =>
+                array(
+                  'name' => 'cust_approves_expert',
+                  'title' => ts('Customer approves Expert'),
+                  'default' => TRUE
+                ),
+              'briefing_date' =>
+                array(
+                  'name' => 'briefing_date',
+                  'title' => ts('Briefing Date'),
+                  'default' => TRUE
+                ),
+              'briefing_status' =>
+                array(
+                  'name' => 'briefing_status',
+                  'title' => ts('Briefing Status'),
+                  'default' => TRUE,
+                ),
+            ),
+          'filters' => array(
+            'user_id' => array(
+              'title' => ts('Main Activities for User'),
+              'default' => 0,
+              'pseudofield' => 1,
+              'type' => CRM_Utils_Type::T_INT,
+              'operatorType' => CRM_Report_Form::OP_SELECT,
+              'options' => $this->_userSelectList,
+            ),
+            'case_type_id' => array('title' => ts('Case Type'),
+              'operatorType' => CRM_Report_Form::OP_MULTISELECT,
+              'options' => $this->_caseTypes,
+            ),
+            'case_status_id' => array('title' => ts('Status'),
+              'operatorType' => CRM_Report_Form::OP_MULTISELECT,
+              'options' => $this->_caseStatus,
+            ),
           ),
-          'id' => array(
-            'no_display' => TRUE,
-            'required' => TRUE,
-          ),
-          'first_name' => array(
-            'title' => ts('First Name'),
-            'no_repeat' => TRUE,
-          ),
-          'id' => array(
-            'no_display' => TRUE,
-            'required' => TRUE,
-          ),
-          'last_name' => array(
-            'title' => ts('Last Name'),
-            'no_repeat' => TRUE,
-          ),
-          'id' => array(
-            'no_display' => TRUE,
-            'required' => TRUE,
-          ),
+          'order_bys' =>
+            array(
+              'start_date' =>
+                array(
+                  'title' => ts('Activity Start Date'),
+                  'name' => 'start_date',
+                  'default' => 1,
+                ),
+            ),
         ),
-        'filters' => array(
-          'sort_name' => array(
-            'title' => ts('Contact Name'),
-            'operator' => 'like',
-          ),
-          'id' => array(
-            'no_display' => TRUE,
-          ),
+      'case_status_weight' =>
+        array(
+          'dao' => 'CRM_Core_DAO_OptionValue',
+          'fields' =>
+            array(
+              'case_status_label' =>
+                array(
+                  'name' => 'label',
+                  'no_display' => TRUE,
+                  'required' => TRUE,
+                ),
+              'weight' =>
+                array(
+                  'no_display' => TRUE,
+                  'required' => TRUE,
+                ),
+            ),
+          'order_bys' =>
+            array(
+              'case_status_label' =>
+                array(
+                  'title' => ts('Case Status'),
+                  'name' => 'label',
+                  'default' => 1,
+                ),
+            ),
         ),
-        'grouping' => 'contact-fields',
-      ),
-      'civicrm_membership' => array(
-        'dao' => 'CRM_Member_DAO_Membership',
-        'fields' => array(
-          'membership_type_id' => array(
-            'title' => 'Membership Type',
-            'required' => TRUE,
-            'no_repeat' => TRUE,
-          ),
-          'join_date' => array('title' => ts('Join Date'),
-            'default' => TRUE,
-          ),
-          'source' => array('title' => 'Source'),
-        ),
-        'filters' => array(
-          'join_date' => array(
-            'operatorType' => CRM_Report_Form::OP_DATE,
-          ),
-          'owner_membership_id' => array(
-            'title' => ts('Membership Owner ID'),
-            'operatorType' => CRM_Report_Form::OP_INT,
-          ),
-          'tid' => array(
-            'name' => 'membership_type_id',
-            'title' => ts('Membership Types'),
-            'type' => CRM_Utils_Type::T_INT,
-            'operatorType' => CRM_Report_Form::OP_MULTISELECT,
-            'options' => CRM_Member_PseudoConstant::membershipType(),
-          ),
-        ),
-        'grouping' => 'member-fields',
-      ),
-      'civicrm_membership_status' => array(
-        'dao' => 'CRM_Member_DAO_MembershipStatus',
-        'alias' => 'mem_status',
-        'fields' => array(
-          'name' => array(
-            'title' => ts('Status'),
-            'default' => TRUE,
-          ),
-        ),
-        'filters' => array(
-          'sid' => array(
-            'name' => 'id',
-            'title' => ts('Status'),
-            'type' => CRM_Utils_Type::T_INT,
-            'operatorType' => CRM_Report_Form::OP_MULTISELECT,
-            'options' => CRM_Member_PseudoConstant::membershipStatus(NULL, NULL, 'label'),
-          ),
-        ),
-        'grouping' => 'member-fields',
-      ),
-      'civicrm_address' => array(
-        'dao' => 'CRM_Core_DAO_Address',
-        'fields' => array(
-          'street_address' => NULL,
-          'city' => NULL,
-          'postal_code' => NULL,
-          'state_province_id' => array('title' => ts('State/Province')),
-          'country_id' => array('title' => ts('Country')),
-        ),
-        'grouping' => 'contact-fields',
-      ),
-      'civicrm_email' => array(
-        'dao' => 'CRM_Core_DAO_Email',
-        'fields' => array('email' => NULL),
-        'grouping' => 'contact-fields',
-      ),
     );
-    $this->_groupFilter = TRUE;
-    $this->_tagFilter = TRUE;
+
     parent::__construct();
   }
 
-  function preProcess() {
-    $this->assign('reportTitle', ts('Membership Detail Report'));
-    parent::preProcess();
-  }
-
+  /**
+   * Overridden parent method to build select part of query
+   */
   function select() {
-    $select = $this->_columnHeaders = array();
-
+    $select = array();
+    $this->_columnHeaders = array();
     foreach ($this->_columns as $tableName => $table) {
       if (array_key_exists('fields', $table)) {
         foreach ($table['fields'] as $fieldName => $field) {
           if (CRM_Utils_Array::value('required', $field) ||
-            CRM_Utils_Array::value($fieldName, $this->_params['fields'])
-          ) {
-            if ($tableName == 'civicrm_address') {
-              $this->_addressField = TRUE;
-            }
-            elseif ($tableName == 'civicrm_email') {
-              $this->_emailField = TRUE;
-            }
+            CRM_Utils_Array::value($fieldName, $this->_params['fields'])) {
             $select[] = "{$field['dbAlias']} as {$tableName}_{$fieldName}";
-            $this->_columnHeaders["{$tableName}_{$fieldName}"]['title'] = $field['title'];
             $this->_columnHeaders["{$tableName}_{$fieldName}"]['type'] = CRM_Utils_Array::value('type', $field);
+            if (isset($field['title'])) {
+              $this->_columnHeaders["{$tableName}_{$fieldName}"]['title'] = $field['title'];
+            }
           }
         }
       }
     }
-
     $this->_select = "SELECT " . implode(', ', $select) . " ";
   }
 
+  /**
+   * Overridden parent method to build from part of query
+   */
+
   function from() {
-    $this->_from = NULL;
+    $caseStatusOptionGroupId = civicrm_api3("OptionGroup", "getvalue",
+      array('return' => "id", 'name' => "case_status"));
+    $csw = $this->_aliases['case_status_weight'];
+    $pum = $this->_aliases['pum_main'];
 
-    $this->_from = "
-         FROM  civicrm_contact {$this->_aliases['civicrm_contact']} {$this->_aclFrom}
-               INNER JOIN civicrm_membership {$this->_aliases['civicrm_membership']}
-                          ON {$this->_aliases['civicrm_contact']}.id =
-                             {$this->_aliases['civicrm_membership']}.contact_id AND {$this->_aliases['civicrm_membership']}.is_test = 0
-               LEFT  JOIN civicrm_membership_status {$this->_aliases['civicrm_membership_status']}
-                          ON {$this->_aliases['civicrm_membership_status']}.id =
-                             {$this->_aliases['civicrm_membership']}.status_id ";
-
-
-    //used when address field is selected
-    if ($this->_addressField) {
+    $this->_from = "FROM pum_my_main_activities ".$pum;
+    if ($this->isTableSelected('case_status_weight')) {
       $this->_from .= "
-             LEFT JOIN civicrm_address {$this->_aliases['civicrm_address']}
-                       ON {$this->_aliases['civicrm_contact']}.id =
-                          {$this->_aliases['civicrm_address']}.contact_id AND
-                          {$this->_aliases['civicrm_address']}.is_primary = 1\n";
-    }
-    //used when email field is selected
-    if ($this->_emailField) {
-      $this->_from .= "
-              LEFT JOIN civicrm_email {$this->_aliases['civicrm_email']}
-                        ON {$this->_aliases['civicrm_contact']}.id =
-                           {$this->_aliases['civicrm_email']}.contact_id AND
-                           {$this->_aliases['civicrm_email']}.is_primary = 1\n";
+        LEFT JOIN civicrm_option_value {$csw} ON {$pum}.case_status_id = {$csw}.value AND {$csw}.option_group_id =
+          {$caseStatusOptionGroupId} AND {$csw}.is_active = 1";
     }
   }
 
+  /**
+   * Overridden parent method to build where clause
+   */
   function where() {
     $clauses = array();
+    $this->_having = '';
     foreach ($this->_columns as $tableName => $table) {
       if (array_key_exists('filters', $table)) {
         foreach ($table['filters'] as $fieldName => $field) {
           $clause = NULL;
-          if (CRM_Utils_Array::value('operatorType', $field) & CRM_Utils_Type::T_DATE) {
+          if (CRM_Utils_Array::value("operatorType", $field) & CRM_Report_Form::OP_DATE) {
             $relative = CRM_Utils_Array::value("{$fieldName}_relative", $this->_params);
             $from     = CRM_Utils_Array::value("{$fieldName}_from", $this->_params);
             $to       = CRM_Utils_Array::value("{$fieldName}_to", $this->_params);
 
-            $clause = $this->dateClause($field['name'], $relative, $from, $to, $field['type']);
-          }
-          else {
+            $clause = $this->dateClause($field['dbAlias'], $relative, $from, $to,
+              CRM_Utils_Array::value('type', $field)
+            );
+          } else {
             $op = CRM_Utils_Array::value("{$fieldName}_op", $this->_params);
+            if ($fieldName == 'case_type_id') {
+              $value = CRM_Utils_Array::value("{$fieldName}_value", $this->_params);
+              if (!empty($value)) {
+                $clause = "( {$field['dbAlias']} REGEXP '[[:<:]]" . implode('[[:>:]]|[[:<:]]', $value) . "[[:>:]]' )";
+              }
+              $op = NULL;
+            }
+            if ($fieldName == 'user_id') {
+              $value = $this->setUserClause();
+              if (!empty($value)) {
+                $pum = $this->_aliases['pum_main'];
+                $clause = "({$pum}.expert_id = {$value} OR {$pum}.representative_id = {$value}
+                OR {$pum}.country_coordinator_id = {$value} OR {$pum}.project_officer_id = {$value}
+                OR {$pum}.project_manager_id = {$value} OR {$pum}.sector_coordinator_id = {$value}
+                OR {$pum}.counsellor_id = {$value})";
+              }
+              $op = NULL;
+            }
+
             if ($op) {
               $clause = $this->whereClause($field,
                 $op,
@@ -218,36 +322,30 @@ class CRM_Casereports_Form_Report_MainActivities extends CRM_Report_Form {
         }
       }
     }
-
     if (empty($clauses)) {
       $this->_where = "WHERE ( 1 ) ";
-    }
-    else {
+    } else {
       $this->_where = "WHERE " . implode(' AND ', $clauses);
     }
-
-    if ($this->_aclWhere) {
-      $this->_where .= " AND {$this->_aclWhere} ";
-    }
   }
 
-  function groupBy() {
-    $this->_groupBy = " GROUP BY {$this->_aliases['civicrm_contact']}.id, {$this->_aliases['civicrm_membership']}.membership_type_id";
+  /**
+   * Overridden parent method to set the column headers
+   */
+  function modifyColumnHeaders() {
+    $this->_columnHeaders['manage_case'] = array('title' => '','type' => CRM_Utils_Type::T_STRING,);
   }
 
-  function orderBy() {
-    $this->_orderBy = " ORDER BY {$this->_aliases['civicrm_contact']}.sort_name, {$this->_aliases['civicrm_contact']}.id, {$this->_aliases['civicrm_membership']}.membership_type_id";
-  }
-
+  /**
+   * Overridden parent method to process criteria into report with data
+   */
   function postProcess() {
 
     $this->beginPostProcess();
 
-    // get the acl clauses built before we assemble the query
-    $this->buildACLClause($this->_aliases['civicrm_contact']);
     $sql = $this->buildQuery(TRUE);
 
-    $rows = array();
+    $rows = $graphRows = array();
     $this->buildRows($sql, $rows);
 
     $this->formatDisplay($rows);
@@ -255,67 +353,175 @@ class CRM_Casereports_Form_Report_MainActivities extends CRM_Report_Form {
     $this->endPostProcess($rows);
   }
 
+  /**
+   * Overridden parent method to alter the display of each row
+   * @param array $rows
+   */
   function alterDisplay(&$rows) {
-    // custom code to alter rows
-    $entryFound = FALSE;
-    $checkList = array();
+
     foreach ($rows as $rowNum => $row) {
+      // build manage case url
+      if (array_key_exists('pum_main_case_id', $row) && array_key_exists('pum_main_customer_id', $row)) {
+        $caseUrl = CRM_Utils_System::url("civicrm/contact/view/case", 'reset=1&action=view&cid='
+          . $row['pum_main_customer_id'] . '&id=' . $row['pum_main_case_id'], $this->_absoluteUrl);
+        $rows[$rowNum]['manage_case'] = ts('Manage');
+        $rows[$rowNum]['manage_case_link'] = $caseUrl;
+        $rows[$rowNum]['manage_case_hover'] = ts("Manage Case");
+      }
 
-      if (!empty($this->_noRepeats) && $this->_outputMode != 'csv') {
-        // not repeat contact display names if it matches with the one
-        // in previous row
-        $repeatFound = FALSE;
-        foreach ($row as $colName => $colVal) {
-          if (CRM_Utils_Array::value($colName, $checkList) &&
-            is_array($checkList[$colName]) &&
-            in_array($colVal, $checkList[$colName])
-          ) {
-            $rows[$rowNum][$colName] = "";
-            $repeatFound = TRUE;
+      if (array_key_exists('pum_main_case_type', $row)) {
+        $value   = $row['pum_main_case_type'];
+        $typeIds = explode(CRM_Core_DAO::VALUE_SEPARATOR, $value);
+        $value   = array();
+        foreach ($typeIds as $typeId) {
+          if ($typeId) {
+            $value[$typeId] = $this->_caseTypes[$typeId];
           }
-          if (in_array($colName, $this->_noRepeats)) {
-            $checkList[$colName][] = $colVal;
-          }
         }
+        $rows[$rowNum]['pum_main_case_type'] = implode(', ', $value);
       }
 
-      if (array_key_exists('civicrm_membership_membership_type_id', $row)) {
-        if ($value = $row['civicrm_membership_membership_type_id']) {
-          $rows[$rowNum]['civicrm_membership_membership_type_id'] = CRM_Member_PseudoConstant::membershipType($value, FALSE);
-        }
-        $entryFound = TRUE;
+      if ($row['pum_main_ma_expert_approval'] == 1) {
+        $rows[$rowNum]['pum_main_ma_expert_approval'] = ts("Yes");
+      } else {
+        $rows[$rowNum]['pum_main_ma_expert_approval'] = ts("No");
       }
 
-      if (array_key_exists('civicrm_address_state_province_id', $row)) {
-        if ($value = $row['civicrm_address_state_province_id']) {
-          $rows[$rowNum]['civicrm_address_state_province_id'] = CRM_Core_PseudoConstant::stateProvince($value, FALSE);
-        }
-        $entryFound = TRUE;
+      if (array_key_exists('pum_main_case_status', $row)) {
+        $rows[$rowNum]['pum_main_case_status'] = $this->_caseStatus[$row['pum_main_case_status']];
       }
 
-      if (array_key_exists('civicrm_address_country_id', $row)) {
-        if ($value = $row['civicrm_address_country_id']) {
-          $rows[$rowNum]['civicrm_address_country_id'] = CRM_Core_PseudoConstant::country($value, FALSE);
-        }
-        $entryFound = TRUE;
+      if (array_key_exists('pum_main_start_date', $row) && (!empty($row['pum_main_start_date']))) {
+        $rows[$rowNum]['pum_main_start_date'] = date('j F Y', strtotime($row['pum_main_start_date']));
       }
 
-      if (array_key_exists('civicrm_contact_sort_name', $row) &&
-        $rows[$rowNum]['civicrm_contact_sort_name'] &&
-        array_key_exists('civicrm_contact_id', $row)
-      ) {
-        $url = CRM_Utils_System::url("civicrm/contact/view",
-          'reset=1&cid=' . $row['civicrm_contact_id'],
-          $this->_absoluteUrl
-        );
-        $rows[$rowNum]['civicrm_contact_sort_name_link'] = $url;
-        $rows[$rowNum]['civicrm_contact_sort_name_hover'] = ts("View Contact Summary for this Contact.");
-        $entryFound = TRUE;
+      if (array_key_exists('pum_main_end_date', $row) && (!empty($row['pum_main_end_date']))) {
+        $rows[$rowNum]['pum_main_end_date'] = date('j F Y', strtotime($row['pum_main_end_date']));
       }
 
-      if (!$entryFound) {
-        break;
+      if (array_key_exists('pum_main_briefing_date', $row) && (!empty($row['pum_main_briefing_date']))) {
+        $rows[$rowNum]['pum_main_briefing_date'] = date('j F Y', strtotime($row['pum_main_briefing_date']));
+      }
+
+      if (CRM_Utils_Array::value('pum_main_expert', $rows[$rowNum])) {
+        $url = CRM_Utils_System::url("civicrm/contact/view" , "action=view&reset=1&cid=". $row['pum_main_expert_id'], $this->_absoluteUrl);
+        $rows[$rowNum]['pum_main_expert_link'] = $url;
+        $rows[$rowNum]['pum_main_expert_hover'] = ts("View Expert");
+      }
+
+      if (CRM_Utils_Array::value('pum_main_representative', $rows[$rowNum])) {
+        $url = CRM_Utils_System::url("civicrm/contact/view" , "action=view&reset=1&cid=". $row['pum_main_representative_id'], $this->_absoluteUrl);
+        $rows[$rowNum]['pum_main_representative_link'] = $url;
+        $rows[$rowNum]['pum_main_representative_hover'] = ts("View Representative");
+      }
+
+      if (CRM_Utils_Array::value('pum_main_customer_name', $rows[$rowNum])) {
+        $url = CRM_Utils_System::url("civicrm/contact/view" , "action=view&reset=1&cid=". $row['pum_main_customer_id'], $this->_absoluteUrl);
+        $rows[$rowNum]['pum_main_customer_name_link'] = $url;
+        $rows[$rowNum]['pum_main_customer_name_hover'] = ts("View Customer");
       }
     }
+  }
+
+  /**
+   * Method to get the users list for the user filter
+   *
+   * @access private
+   */
+  private function setUserSelectList() {
+    $ccContacts = CRM_Threepeas_BAO_PumCaseRelation::getAllActiveRelationContacts('country_coordinator');
+    $profContacts = CRM_Threepeas_BAO_PumCaseRelation::getAllActiveRelationContacts('project_officer');
+    $sectorContacts = CRM_Threepeas_BAO_PumCaseRelation::getAllSectorCoordinators();
+    $threepeasConfig = CRM_Threepeas_Config::singleton();
+    $projectManagers = array();
+    $pmContacts = array();
+    $groupContactParams = array('group_id' => $threepeasConfig->projectmanagerGroupId);
+    $this->_userSelectList[0] = 'current user';
+    try {
+      $projectManagers = civicrm_api3('GroupContact', 'Get', $groupContactParams);
+    } catch (CiviCRM_API3_Exception $ex) {
+    }
+    foreach ($projectManagers['values'] as $projectManager) {
+      $pmContacts[$projectManager['contact_id']] = $projectManager['contact_id'];
+    }
+    $allContacts = $ccContacts + $profContacts + $sectorContacts + $pmContacts;
+    @uasort($allContacts, 'CRM_Threepeas_Utils::sortArrayByTitle');
+    $this->_userSelectList[0] = 'current user';
+    foreach ($allContacts as $contact) {
+      $this->_userSelectList[$contact] = CRM_Threepeas_Utils::getContactName($contact);
+    }
+  }
+
+  /**
+   * Overridden parent method to set the found rows on distinct case_id
+   */
+  function setPager($rowCount = self::ROW_COUNT_LIMIT) {
+    if ($this->_limit && ($this->_limit != '')) {
+      $sql              = "SELECT COUNT(DISTINCT({$this->_aliases['pum_main']}.case_id)) ".$this->_from." ".$this->_where;
+      $this->_rowsFound = CRM_Core_DAO::singleValueQuery($sql);
+      $params           = array(
+        'total' => $this->_rowsFound,
+        'rowCount' => $rowCount,
+        'status' => ts('Records') . ' %%StatusMessage%%',
+        'buttonBottom' => 'PagerBottomButton',
+        'buttonTop' => 'PagerTopButton',
+        'pageID' => $this->get(CRM_Utils_Pager::PAGE_ID),
+      );
+      $pager = new CRM_Utils_Pager($params);
+      $this->assign_by_ref('pager', $pager);
+    }
+  }
+
+  /**
+   * Overridden parent method to build the report rows
+   *
+   * @param string $sql
+   * @param array $rows
+   * @access public
+   */
+  function buildRows($sql, &$rows) {
+    $rows = array();
+    $dao = CRM_Core_DAO::executeQuery($sql);
+    $this->modifyColumnHeaders();
+    while ($dao->fetch()) {
+      $row = array();
+      foreach ($this->_columnHeaders as $key => $value) {
+        if (property_exists($dao, $key)) {
+          $row[$key] = $dao->$key;
+        }
+      }
+      $rows[] = $row;
+    }
+  }
+
+  /**
+   * Method to add the user clause for where
+   */
+  private function setUserClause() {
+    if (!isset($this->_params['user_id_value']) || empty($this->_params['user_id_value'])) {
+      $session = CRM_Core_Session::singleton();
+      $userId = $session->get('userID');
+    } else {
+      $userId = $this->_params['user_id_value'];
+    }
+    return $userId;
+  }
+
+  /**
+   * Overridden parent method orderBy (issue 2995 order by status on weight)
+   */
+  function orderBy() {
+    $this->_orderBy  = "";
+    $this->_sections = array();
+    $this->storeOrderByArray();
+    foreach ($this->_orderByArray as $arrayKey => $arrayValue) {
+      if ($arrayValue == "tus_weight_civireport.label ASC") {
+        $this->_orderByArray[$arrayKey] = $this->_aliases['case_status_weight'].".weight";
+      }
+    }
+    if(!empty($this->_orderByArray) && !$this->_rollup == 'WITH ROLLUP'){
+      $this->_orderBy = "ORDER BY " . implode(', ', $this->_orderByArray);
+    }
+    $this->assign('sections', $this->_sections);
   }
 }

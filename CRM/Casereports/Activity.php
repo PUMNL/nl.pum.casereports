@@ -148,12 +148,20 @@ class CRM_Casereports_Activity {
    */
   private static function processBriefing($objectRef) {
     if (self::caseExists($objectRef->case_id)) {
-      $query = "UPDATE civicrm_pum_case_reports SET briefing_status = %1, briefing_date = %2 WHERE case_id = %3";
-      $values = array(
-        1 => array(self::setBriefingStatusColumn($objectRef->status_id), 'String'),
-        2 => array(date('Ymd', strtotime($objectRef->activity_date_time)), 'String'),
-        3 => array($objectRef->case_id, 'Integer')
-      );
+      if (isset($objectRef->activity_date_time) && !empty($objectRef->activity_date_time)) {
+        $query = "UPDATE civicrm_pum_case_reports SET briefing_status = %1, briefing_date = %2 WHERE case_id = %3";
+        $values = array(
+          1 => array(self::setBriefingStatusColumn($objectRef->status_id), 'String'),
+          2 => array(date('Ymd', strtotime($objectRef->activity_date_time)), 'String'),
+          3 => array($objectRef->case_id, 'Integer')
+        );
+      } else {
+        $query = "UPDATE civicrm_pum_case_reports SET briefing_status = %1 WHERE case_id = %2";
+        $values = array(
+          1 => array(self::setBriefingStatusColumn($objectRef->status_id), 'String'),
+          2 => array($objectRef->case_id, 'Integer')
+        );
+      }
       CRM_Core_DAO::executeQuery($query, $values);
     } else {
       $query = "INSERT INTO civicrm_pum_case_reports (case_id, briefing_status, briefing_date) VALUES(%1, %2, %3)";

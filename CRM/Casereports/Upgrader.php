@@ -14,7 +14,6 @@ class CRM_Casereports_Upgrader extends CRM_Casereports_Upgrader_Base {
   public function install() {
     $this->executeSqlFile('sql/createCaseReportsTable.sql');
     $this->createViewMyMainActivities();
-    $this->importExistingForMainActivities();
   }
 
   /**
@@ -40,7 +39,7 @@ class CRM_Casereports_Upgrader extends CRM_Casereports_Upgrader_Base {
     porel.contact_id_b AS project_officer_id, pmrel.contact_id_b AS project_manager_id, screl.contact_id_b AS sector_coordinator_id,
     corel.contact_id_b AS counsellor_id, ca.do_you_think_the_expert_matches__78 AS cust_approves_expert
     FROM civicrm_case cc JOIN civicrm_case_contact ccc ON cc.id = ccc.case_id JOIN civicrm_contact cont ON ccc.contact_id = cont.id
-    LEFT JOIN civicrm_value_main_activity_info ma ON cc.id = ma.entity_id LEFT JOIN civicrm_address adr ON cont.id = adr.contact_id AND is_primaray = 1
+    LEFT JOIN civicrm_value_main_activity_info ma ON cc.id = ma.entity_id LEFT JOIN civicrm_address adr ON cont.id = adr.contact_id AND is_primary = 1
     LEFT JOIN civicrm_value_customer_dis_agreement_of_proposed_expert_17 ca ON cc.id = ca.entity_id
     LEFT JOIN civicrm_country cntry ON adr.country_id = cntry.id LEFT JOIN civicrm_pum_case_reports pum ON cc.id = pum.case_id
     LEFT JOIN civicrm_relationship exprel ON cc.id = exprel.case_id AND exprel.relationship_type_id = {$expertRelationshipTypeId}
@@ -56,15 +55,41 @@ class CRM_Casereports_Upgrader extends CRM_Casereports_Upgrader_Base {
   }
 
   /**
-   * Method to import current data into civicrm_pum_case_reports table
+   * Upgrade 1001 change column ma_expert_approval for n/a value
+   *
+   * @return bool
    */
-  protected function importExistingForMainActivities() {
-    $import = new CRM_Casereports_Import();
-    $daoCaseIds = CRM_Core_DAO::executeQuery('SELECT DISTINCT(case_id) FROM pum_my_main_activities');
-    while ($daoCaseIds->fetch()) {
-      $import->importAccepts($daoCaseIds->case_id);
-      $import->importRejects($daoCaseIds->case_id);
-      $import->importBriefing($daoCaseIds->case_id);
+  public function upgrade_1001() {
+    $this->ctx->log->info('Applying update 1001 alter table ma_expert_approval in civicrm_pum_case_reports');
+    $config = CRM_Casereports_Config::singleton();
+    if (CRM_Core_DAO::checkTableExists('civicrm_pum_case_reports')) {
+      CRM_Core_DAO::executeQuery('ALTER TABLE civicrm_pum_case_reports CHANGE COLUMN ma_expert_approval
+        ma_expert_approval VARCHAR(15) NULL DEFAULT NULL');
+      // set values 'n/a'
+      $naQuery = 'UPDATE civicrm_pum_case_reports SET ma_expert_approval = %1 WHERE case_id NOT IN(
+        SELECT DISTINCT(case_id) FROM civicrm_case_activity cact JOIN civicrm_activity act ON cact.activity_id = act.id
+        WHERE activity_type_id IN(%2, %3) AND is_current_revision = %4)';
+      $naParams = array(
+        1 => array('n/a', 'String'),
+        2 => array($config->getMaAcceptActivityTypeId(), 'Integer'),
+        3 => array($config->getMaRejectActivityTypeId(), 'Integer'),
+        4 => array(1, 'Integer')
+      );
+      CRM_Core_DAO::executeQuery($naQuery, $naParams);
+      // now set all remaining 1's to yes and 0's to no
+      $yesQuery = 'UPDATE civicrm_pum_case_reports SET ma_expert_approval = %1 WHERE ma_expert_approval = %2';
+      $yesParams = array(
+        1 => array('Yes', 'String'),
+        2 => array('1', 'String')
+      );
+      CRM_Core_DAO::executeQuery($yesQuery, $yesParams);
+      $noQuery = 'UPDATE civicrm_pum_case_reports SET ma_expert_approval = %1 WHERE ma_expert_approval = %2';
+      $noParams = array(
+        1 => array('No', 'String'),
+        2 => array('0', 'String')
+      );
+      CRM_Core_DAO::executeQuery($noQuery, $noParams);
     }
+    return true;
   }
 }

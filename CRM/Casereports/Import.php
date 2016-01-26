@@ -42,136 +42,75 @@ class CRM_Casereports_Import {
    * @param $caseId
    */
   public function importAccepts($caseId) {
-    $query = 'SELECT ma.'.$this->_ccColumn.', ma.'.$this->_scColumn.' FROM civicrm_case_activity cact
-      JOIN civicrm_activity act ON cact.activity_id = act.id AND act.is_current_revision = %1 AND act.is_deleted = %2
-      LEFT JOIN '.$this->_acceptTableName.' ma ON cact.activity_id = ma.entity_id
-      WHERE act.activity_type_id = %3 AND cact.case_id = %4';
+    $query = "SELECT act.activity_type_id, act.id
+      FROM civicrm_case_activity cas JOIN civicrm_activity act ON cas.activity_id = act.id
+      WHERE act.is_current_revision = %1 AND act.activity_type_id IN (%2, %3) AND cas.case_id = %4
+      ORDER BY act.activity_date_time DESC, act.id DESC";
     $params = array(
       1 => array(1, 'Integer'),
-      2 => array(0, 'Integer'),
-      3 => array($this->_acceptActivityTypeId, 'Integer'),
-      4 => array($caseId, 'Integer')
-    );
-
-    $dao = CRM_Core_DAO::executeQuery($query, $params);
-    while ($dao->fetch()) {
-      $ccColumn = $this->_ccColumn;
-      $scColumn = $this->_scColumn;
-      if (CRM_Casereports_Activity::caseExists($caseId) == TRUE) {
-        if (!empty($dao->$ccColumn) && !empty($dao->$scColumn)) {
-          $update = 'UPDATE civicrm_pum_case_reports SET ma_expert_approval = %1, pq_approved_cc = %2,
-          pq_approved_sc = %3 WHERE case_id = %4';
-          $values = array(
-            1 => array(1, 'Integer'),
-            2 => array($dao->$ccColumn, 'String'),
-            3 => array($dao->$scColumn, 'String'),
-            4 => array($caseId, 'Integer')
-          );
-        } else {
-          if (empty($dao->$ccColumn) && empty($dao->$scColumn)) {
-            $update = 'UPDATE civicrm_pum_case_reports SET ma_expert_approval = %1, pq_approved_cc = NULL,
-              pq_approved_sc = NULL WHERE case_id = %2';
-            $values = array(
-              1 => array(1, 'Integer'),
-              2 => array($caseId, 'Integer')
-            );
-        } else {
-            if (empty($dao->$ccColumn)) {
-              $update = 'UPDATE civicrm_pum_case_reports SET ma_expert_approval = %1, pq_approved_cc = NULL,
-              pq_approved_sc = %2 WHERE case_id = %3';
-              $values = array(
-                1 => array(1, 'Integer'),
-                2 => array($dao->$scColumn, 'String'),
-                3 => array($caseId, 'Integer')
-              );
-            } else {
-              $update = 'UPDATE civicrm_pum_case_reports SET ma_expert_approval = %1, pq_approved_cc = %2,
-              pq_approved_sc = NULL WHERE case_id = %3';
-              $values = array(
-                1 => array(1, 'Integer'),
-                2 => array($dao->$ccColumn, 'String'),
-                3 => array($caseId, 'Integer')
-              );
-            }
-          }
-        }
-        CRM_Core_DAO::executeQuery($update, $values);
-      } else {
-        if (!empty($dao->$ccColumn) && !empty($dao->$scColumn)) {
-          $insert = 'INSERT INTO civicrm_pum_case_reports (case_id, ma_expert_approval, pq_approved_cc, pq_approved_sc)
-          VALUES(%1, %2, %3, %4)';
-          $values = array(
-            1 => array($caseId, 'Integer'),
-            2 => array(1, 'Integer'),
-            3 => array($dao->$ccColumn, 'String'),
-            4 => array($dao->$scColumn, 'String')
-          );
-        } else {
-          if (empty($dao->$ccColumn) && empty($dao->$scColumn)) {
-            $insert = 'INSERT INTO civicrm_pum_case_reports (case_id, ma_expert_approval) VALUES(%1, %2)';
-            $values = array(
-              1 => array($caseId, 'Integer'),
-              2 => array(1, 'Integer')
-            );
-          } else {
-            if (empty($dao->$ccColumn)) {
-              $insert = 'INSERT INTO civicrm_pum_case_reports (case_id, ma_expert_approval, pq_approved_sc) VALUES(%1, %2, %3)';
-              $values = array(
-                1 => array($caseId, 'Integer'),
-                2 => array(1, 'Integer'),
-                3 => array($dao->$scColumn, 'String')
-              );
-            } else {
-              $insert = 'INSERT INTO civicrm_pum_case_reports (case_id, ma_expert_approval, pq_approved_cc) VALUES(%1, %2, %3)';
-              $values = array(
-                1 => array($caseId, 'Integer'),
-                2 => array(1, 'Integer'),
-                3 => array($dao->$ccColumn, 'String')
-              );
-            }
-          }
-        }
-        CRM_Core_DAO::executeQuery($insert, $values);
-      }
-    }
-  }
-
-  /**
-   * Method to import reject main activity proposal for case_id
-   *
-   * @param $caseId
-   */
-  public function importRejects($caseId) {
-    $query = 'SELECT COUNT(*) AS countReject FROM civicrm_case_activity cact
-      JOIN civicrm_activity act ON cact.activity_id = act.id AND act.is_current_revision = %1 AND act.is_deleted = %2
-      WHERE act.activity_type_id = %3 AND cact.case_id = %4';
-    $params = array(
-      1 => array(1, 'Integer'),
-      2 => array(0, 'Integer'),
+      2 => array($this->_acceptActivityTypeId, 'Integer'),
       3 => array($this->_rejectActivityTypeId, 'Integer'),
       4 => array($caseId, 'Integer')
     );
     $dao = CRM_Core_DAO::executeQuery($query, $params);
+    // set status based on first activity retrieved
     if ($dao->fetch()) {
-      if ($dao->countReject > 0) {
-        if (CRM_Casereports_Activity::caseExists($caseId) == TRUE) {
-          $update = 'UPDATE civicrm_pum_case_reports SET ma_expert_approval = %1, pq_approved_cc = NULL,
-            pq_approved_sc = NULL WHERE case_id = %2';
-          $values = array(
-            1 => array(0, 'Integer'),
-            2 => array($caseId, 'Integer')
-          );
-          CRM_Core_DAO::executeQuery($update, $values);
-        } else {
-          $insert = 'INSERT INTO civicrm_pum_case_reports (case_id, ma_expert_approval, pq_approved_cc, pq_approved_sc)
-            VALUES(%1, %2, NULL, NULL)';
-          $values = array(
-            1 => array($caseId, 'Integer'),
-            2 => array(0, 'Integer')
-          );
-          CRM_Core_DAO::executeQuery($insert, $values);
+      // if accept -> get custom data and write or update case record
+      if ($dao->activity_type_id == $this->_acceptActivityTypeId) {
+        $queryCustom = 'SELECT '.$this->_ccColumn.', '.$this->_scColumn.' FROM '.$this->_acceptTableName.' WHERE entity_id = %1';
+        $paramsCustom = array(1 => array($dao->id, 'Integer'));
+        $daoCustom = CRM_Core_DAO::executeQuery($queryCustom, $paramsCustom);
+        if ($daoCustom->fetch()) {
+          $updateClauses = array();
+          $ccColumn = $this->_ccColumn;
+          $scColumn = $this->_scColumn;
+          $values[1] = array('Yes', 'String');
+          $updateClauses[] = "ma_expert_approval = %1";
+          $values[2] = array($caseId, 'Integer');
+          if (isset($daoCustom->$ccColumn) && !empty($daoCustom->$ccColumn)) {
+            $values[3] = array($daoCustom->$ccColumn, 'String');
+            $updateClauses[] = "pq_approved_cc = %3";
+          }
+          if (isset($daoCustom->$scColumn) && !empty($daoCustom->$scColumn)) {
+            $values[4] = array($daoCustom->$scColumn, 'String');
+            $updateClauses[] = "pq_approved_sc = %4";
+          }
+          if (CRM_Casereports_Activity::caseExists($caseId)) {
+            $pumQuery = 'UPDATE civicrm_pum_case_reports SET '.implode(', ', $updateClauses).'  WHERE case_id = %2';
+          } else {
+            $updateClauses[] = "case_id = %2";
+            $pumQuery = 'INSERT INTO civicrm_pum_case_reports SET '.implode(', ', $updateClauses);
+          }
+          CRM_Core_DAO::executeQuery($pumQuery, $values);
         }
       }
+      // if reject -> write or update case record
+      if ($dao->activity_type_id == $this->_rejectActivityTypeId) {
+        $values = array(
+          1 => array('No', 'String'),
+          2 => array($caseId, 'Integer')
+        );
+        if (CRM_Casereports_Activity::caseExists($caseId)) {
+          $pumQuery = 'UPDATE civicrm_pum_case_reports SET ma_expert_approval = %1, pq_approved_cc = NULL,
+            pq_approved_sc = NULL WHERE case_id = %2';
+        } else {
+          $pumQuery = 'INSERT INTO civicrm_pum_case_reports (ma_expert_approval, case_id, pq_approved_cc, pq_approved_sc) VALUES(%1, %2, NULL, NULL)';
+        }
+        CRM_Core_DAO::executeQuery($pumQuery, $values);
+      }
+    } else {
+      // if not found, write or update case record
+      $values = array(
+        1 => array('n/a', 'String'),
+        2 => array($caseId, 'Integer')
+      );
+      if (CRM_Casereports_Activity::caseExists($caseId) == TRUE) {
+        $pumQuery = 'UPDATE civicrm_pum_case_reports SET ma_expert_approval = %1, pq_approved_cc = NULL,
+          pq_approved_sc = NULL WHERE case_id = %2';
+      } else {
+        $pumQuery = 'INSERT INTO civicrm_pum_case_reports (ma_expert_approval, case_id, pq_approved_cc, pq_approved_sc) VALUES(%1, %2, NULL, NULL)';
+      }
+      CRM_Core_DAO::executeQuery($pumQuery, $values);
     }
   }
 

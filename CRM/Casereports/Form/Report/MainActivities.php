@@ -381,12 +381,6 @@ class CRM_Casereports_Form_Report_MainActivities extends CRM_Report_Form {
         $rows[$rowNum]['pum_main_case_type'] = implode(', ', $value);
       }
 
-      if ($row['pum_main_ma_expert_approval'] == 1) {
-        $rows[$rowNum]['pum_main_ma_expert_approval'] = ts("Yes");
-      } else {
-        $rows[$rowNum]['pum_main_ma_expert_approval'] = ts("No");
-      }
-
       if (array_key_exists('pum_main_case_status', $row)) {
         $rows[$rowNum]['pum_main_case_status'] = $this->_caseStatus[$row['pum_main_case_status']];
       }

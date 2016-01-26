@@ -52,7 +52,7 @@ class CRM_Casereports_Activity {
       $query = 'UPDATE civicrm_pum_case_reports SET ma_expert_approval = %1, pq_approved_cc = %2, pq_approved_sc = %3
         WHERE case_id = %4';
       $values = array(
-        1 => array(1, 'Integer'),
+        1 => array('Yes', 'String'),
         2 => array($approvalValues['cc'], 'String'),
         3 => array($approvalValues['sc'], 'String'),
         4 => array($objectRef->case_id, 'Integer')
@@ -63,7 +63,7 @@ class CRM_Casereports_Activity {
         VALUES(%1, %2, %3, %4)';
       $values = array(
         1 => array($objectRef->case_id, 'Integer'),
-        2 => array(1, 'Integer'),
+        2 => array('Yes', 'String'),
         3 => array($approvalValues['cc'], 'String'),
         4 => array($approvalValues['sc'], 'String')
       );
@@ -114,17 +114,11 @@ class CRM_Casereports_Activity {
    * @static
    */
   private static function processReject($caseId) {
-    $values = array();
-    $values['case_id'] = $caseId;
-      $values['ma_expert_approval'] = 0;
-    $values['pq_approved_cc'] = NULL;
-    $values['pq_approved_sc'] = NULL;
-
     if (self::caseExists($caseId)) {
       $query = 'UPDATE civicrm_pum_case_reports SET ma_expert_approval = %1, pq_approved_cc = NULL, pq_approved_sc = NULL
         WHERE case_id = %2';
       $values = array(
-        1 => array(0, 'Integer'),
+        1 => array('No', 'String'),
         2 => array($caseId, 'Integer')
       );
       CRM_Core_DAO::executeQuery($query, $values);
@@ -133,7 +127,7 @@ class CRM_Casereports_Activity {
         VALUES(%1, %2, NULL, NULL)';
       $values = array(
         1 => array($caseId, 'Integer'),
-        2 => array(0, 'Integer')
+        2 => array('No', 'String')
       );
       CRM_Core_DAO::executeQuery($query, $values);
     }
@@ -231,9 +225,11 @@ class CRM_Casereports_Activity {
       $config = CRM_Casereports_Config::singleton();
       if ($activity['activity_type_id'] == $config->getMaAcceptActivityTypeId() ||
         $activity['activity_type_id'] == $config->getMaRejectActivityTypeId()) {
-        $update = "UPDATE civicrm_pum_case_reports SET ma_expert_approval = NULL, pq_approved_cc = NULL,
-          pq_approved_sc = NULL WHERE case_id = %1";
-        CRM_Core_DAO::executeQuery($update, array(1 => array($caseId, 'Integer')));
+        $update = "UPDATE civicrm_pum_case_reports SET ma_expert_approval = %1, pq_approved_cc = NULL,
+          pq_approved_sc = NULL WHERE case_id = %2";
+        CRM_Core_DAO::executeQuery($update, array(
+          1 => array('n/a', 'String'),
+          2 => array($caseId, 'Integer')));
       }
       if ($activity['activity_type_id'] == $config->getBriefingActivityTypeId()) {
         $update = "UPDATE civicrm_pum_case_reports SET briefing_status = NULL, briefing_date = NULL WHERE case_id = %1";

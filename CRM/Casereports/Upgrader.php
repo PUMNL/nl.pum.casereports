@@ -40,7 +40,7 @@ class CRM_Casereports_Upgrader extends CRM_Casereports_Upgrader_Base {
     porel.contact_id_b AS project_officer_id, pmrel.contact_id_b AS project_manager_id, screl.contact_id_b AS sector_coordinator_id,
     corel.contact_id_b AS counsellor_id, ca.do_you_think_the_expert_matches__78 AS cust_approves_expert
     FROM civicrm_case cc JOIN civicrm_case_contact ccc ON cc.id = ccc.case_id JOIN civicrm_contact cont ON ccc.contact_id = cont.id
-    LEFT JOIN civicrm_value_main_activity_info ma ON cc.id = ma.entity_id LEFT JOIN civicrm_address adr ON cont.id = adr.contact_id
+    LEFT JOIN civicrm_value_main_activity_info ma ON cc.id = ma.entity_id LEFT JOIN civicrm_address adr ON cont.id = adr.contact_id AND is_primaray = 1
     LEFT JOIN civicrm_value_customer_dis_agreement_of_proposed_expert_17 ca ON cc.id = ca.entity_id
     LEFT JOIN civicrm_country cntry ON adr.country_id = cntry.id LEFT JOIN civicrm_pum_case_reports pum ON cc.id = pum.case_id
     LEFT JOIN civicrm_relationship exprel ON cc.id = exprel.case_id AND exprel.relationship_type_id = {$expertRelationshipTypeId}

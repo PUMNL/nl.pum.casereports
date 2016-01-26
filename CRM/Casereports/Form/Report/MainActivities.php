@@ -436,7 +436,6 @@ class CRM_Casereports_Form_Report_MainActivities extends CRM_Report_Form {
     $projectManagers = array();
     $pmContacts = array();
     $groupContactParams = array('group_id' => $threepeasConfig->projectmanagerGroupId);
-    $this->_userSelectList[0] = 'current user';
     try {
       $projectManagers = civicrm_api3('GroupContact', 'Get', $groupContactParams);
     } catch (CiviCRM_API3_Exception $ex) {
@@ -445,11 +444,12 @@ class CRM_Casereports_Form_Report_MainActivities extends CRM_Report_Form {
       $pmContacts[$projectManager['contact_id']] = $projectManager['contact_id'];
     }
     $allContacts = $ccContacts + $profContacts + $sectorContacts + $pmContacts;
-    @uasort($allContacts, 'CRM_Threepeas_Utils::sortArrayByTitle');
-    $this->_userSelectList[0] = 'current user';
+    $sortedContacts = array();
     foreach ($allContacts as $contact) {
-      $this->_userSelectList[$contact] = CRM_Threepeas_Utils::getContactName($contact);
+      $sortedContacts[$contact] = CRM_Threepeas_Utils::getContactName($contact);
     }
+    asort($sortedContacts);
+    $this->_userSelectList = array(0 => 'current user') + $sortedContacts;
   }
 
   /**

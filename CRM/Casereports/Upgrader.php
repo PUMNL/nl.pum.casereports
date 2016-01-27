@@ -92,4 +92,21 @@ class CRM_Casereports_Upgrader extends CRM_Casereports_Upgrader_Base {
     }
     return true;
   }
+  /**
+   * Upgrade 1002 set default n/a
+   *
+   * @return bool
+   */
+  public function upgrade_1002() {
+    $this->ctx->log->info('Applying update 1002 set default for ma_expert_approval in civicrm_pum_case_reports');
+    if (CRM_Core_DAO::checkTableExists('civicrm_pum_case_reports')) {
+      CRM_Core_DAO::executeQuery('ALTER TABLE civicrm_pum_case_reports CHANGE COLUMN ma_expert_approval
+        ma_expert_approval VARCHAR(15) NULL DEFAULT "n/a"');
+      // set values 'n/a'
+      $naQuery = 'UPDATE civicrm_pum_case_reports SET ma_expert_approval = %1 WHERE ma_expert_approval IS NULL';
+      $naParams = array(1 => array('n/a', 'String'));
+      CRM_Core_DAO::executeQuery($naQuery, $naParams);
+    }
+    return true;
+  }
 }

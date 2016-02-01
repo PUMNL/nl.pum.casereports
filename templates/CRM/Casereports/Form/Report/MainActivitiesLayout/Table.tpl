@@ -102,12 +102,12 @@
                         <span id="mainactivity_report{$row.pum_main_case_id}_show">
                             <a href="#" onclick="
                                     mainactivity_reportCaseDetails('{$row.pum_main_case_id}','{$row.pum_main_customer_id}');
-                                    showCaseActivities('{$row.pum_main_case_id}');
+                                    showMainActCaseActivities('{$row.pum_main_case_id}');
                                     return false;"
                                     ><img src="{$config->resourceBase}i/TreePlus.gif" class="action-icon" alt="{ts}open section{/ts}"/></a>
                         </span>
                         <span id="minus_mainactivity_report{$row.pum_main_case_id}_hide" style="display: none;">
-                            <a href="#" onclick="hideCaseActivities('{$row.pum_main_case_id}'); return false;">
+                            <a href="#" onclick="hideMainActCaseActivities('{$row.pum_main_case_id}'); return false;">
                                 <img src="{$config->resourceBase}i/TreeMinus.gif" class="action-icon" alt="{ts}open section{/ts}"/>
                             </a>
                         </span>
@@ -207,14 +207,14 @@
         });
     }
 
-    function showCaseActivities( caseId) {
+    function showMainActCaseActivities( caseId) {
         cj('#mainactivity_report-casedetails-'+ caseId).show();
         cj('#mainactivity_report_'+caseId+'_hide').show();
         cj('#mainactivity_report'+caseId+'_show').hide();
         cj('#minus_mainactivity_report'+caseId+'_hide').show();
     }
 
-    function hideCaseActivities( caseId) {
+    function hideMainActCaseActivities( caseId) {
         cj('#mainactivity_report-casedetails-'+ caseId).hide();
         cj('#mainactivity_report_'+caseId+'_hide').hide();
         cj('#mainactivity_report'+caseId+'_show').show();

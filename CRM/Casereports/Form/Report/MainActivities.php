@@ -430,18 +430,7 @@ class CRM_Casereports_Form_Report_MainActivities extends CRM_Report_Form {
     $ccContacts = CRM_Threepeas_BAO_PumCaseRelation::getAllActiveRelationContacts('country_coordinator');
     $profContacts = CRM_Threepeas_BAO_PumCaseRelation::getAllActiveRelationContacts('project_officer');
     $sectorContacts = CRM_Threepeas_BAO_PumCaseRelation::getAllSectorCoordinators();
-    $threepeasConfig = CRM_Threepeas_Config::singleton();
-    $projectManagers = array();
-    $pmContacts = array();
-    $groupContactParams = array('group_id' => $threepeasConfig->projectmanagerGroupId);
-    try {
-      $projectManagers = civicrm_api3('GroupContact', 'Get', $groupContactParams);
-    } catch (CiviCRM_API3_Exception $ex) {
-    }
-    foreach ($projectManagers['values'] as $projectManager) {
-      $pmContacts[$projectManager['contact_id']] = $projectManager['contact_id'];
-    }
-    $allContacts = $ccContacts + $profContacts + $sectorContacts + $pmContacts;
+    $allContacts = $ccContacts + $profContacts + $sectorContacts + $this->getProjectManagers() + $this->getGrantCoordinators();
     $sortedContacts = array();
     foreach ($allContacts as $contact) {
       $sortedContacts[$contact] = CRM_Threepeas_Utils::getContactName($contact);
@@ -468,6 +457,67 @@ class CRM_Casereports_Form_Report_MainActivities extends CRM_Report_Form {
       $pager = new CRM_Utils_Pager($params);
       $this->assign_by_ref('pager', $pager);
     }
+  }
+
+  /**
+   * Method to get project managers
+   *
+   * @return array
+   */
+  private function getProjectManagers() {
+    $config = CRM_Threepeas_Config::singleton();
+    $pmContacts = array();
+    $groupContactParams = array('group_id' => $config->projectmanagerGroupId, 'options' => array('limit' => 9999));
+    try {
+      $projectManagers = civicrm_api3('GroupContact', 'Get', $groupContactParams);
+      foreach ($projectManagers['values'] as $projectManager) {
+        $pmContacts[$projectManager['contact_id']] = $projectManager['contact_id'];
+      }
+    } catch (CiviCRM_API3_Exception $ex) {
+    }
+    return $pmContacts;
+  }
+
+  /**
+   * Method to get grant coordinators
+   *
+   * @return array
+   */
+  private function getGrantCoordinators() {
+    $grantCoordinatorsGroupId = $this->getGrantCoordinatorsGroupId();
+    $gcContacts = array();
+    if ($grantCoordinatorsGroupId) {
+      $groupContactParams = array('group_id' => $grantCoordinatorsGroupId, 'options' => array('limit' => 999));
+      try {
+        $grantCoordinators = civicrm_api3('GroupContact', 'Get', $groupContactParams);
+        foreach ($grantCoordinators['values'] as $grantCoordinator) {
+          $gcContacts[$grantCoordinator['contact_id']] = $grantCoordinator['contact_id'];
+        }
+      } catch (CiviCRM_API3_Exception $ex) {}
+    }
+    return $gcContacts;
+  }
+
+  /**
+   * Method to find group id for group Grant Coordinators (assuming name has pattern Grant_Coordinators_.......)
+   *
+   * @return bool|int
+   * @throws Exception when error from API
+   */
+  private function getGrantCoordinatorsGroupId() {
+    try {
+      $groups = civicrm_api3('Group', 'Get', array('is_active' => 1, 'options' => array('limit' => 99999)));
+      foreach ($groups['values'] as $group) {
+        $parts = explode('_', $group['name']);
+        if (isset($parts[1]) && $parts[0] == 'Grant' && $parts[1] == 'Coordinators') {
+          return $group['id'];
+        }
+      }
+    } catch (CiviCRM_API3_Exception $ex) {
+      throw new Exception(ts('Could not find ANY active groups in '.__METHOD__.', contact your system administrator. 
+      Error from API Group Get: '.$ex->getMessage()));
+    }
+    return FALSE;
   }
 
   /**

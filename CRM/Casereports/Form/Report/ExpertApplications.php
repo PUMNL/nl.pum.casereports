@@ -50,12 +50,12 @@ class CRM_Casereports_Form_Report_ExpertApplications extends CRM_Report_Form {
                   'title' => ts('Sector Coordinator'),
                   'required' => TRUE
                 ),
-              'sector_id' =>
+              /*'sector_id' =>
                 array(
                   'name' => 'sector',
                   'title' => ts('Sector'),
                   'default' => TRUE,
-                ),
+                ),*/
               'status' =>
                 array(
                   'name' => 'status',
@@ -87,11 +87,11 @@ class CRM_Casereports_Form_Report_ExpertApplications extends CRM_Report_Form {
               'operatorType' => CRM_Report_Form::OP_MULTISELECT,
               'options' => $this->_caseStatusList,
             ),
-            'sector_id' => array(
+            /*'sector_id' => array(
               'title' => ts('Sector'),
               'operatorType' => CRM_Report_Form::OP_MULTISELECT,
               'options' => $this->_sectorList,
-            ),
+            ),*/
           ),
           'order_bys' =>
             array(

@@ -111,11 +111,56 @@ class CRM_Casereports_Upgrader extends CRM_Casereports_Upgrader_Base {
   }
 
   /**
-   * Upgrade 1010 - create view for report Expert Application
+   * Upgrade 1010 - create view for report Expert Application before contact segment
    * 
    * @throws Exception when error in API call
    */
   
+  public function upgrade_1003() {
+    $this->ctx->log->info('Applying update 1003 add view for report Expert Applications');
+    try {
+      $caseStatusOptionGroupId = civicrm_api3('OptionGroup', 'Getvalue', array('name' => 'case_status', 'return' => 'id'));
+    } catch (CiviCRM_API3_Exception $ex) {
+      throw new Exception(ts('Could not find an option group for case_status in '.__METHOD__
+          .', contact your system administrator. Error from API OptionGroup Getvalue: ').$ex->getMessage());
+    }
+    try {
+      $caseTypeOptionGroupId = civicrm_api3('OptionGroup', 'Getvalue', array('name' => 'case_type', 'return' => 'id'));
+      try {
+        $expertCaseTypeId = civicrm_api3('OptionValue', 'Getvalue', 
+          array('option_group_id' => $caseTypeOptionGroupId, 'name' => 'Expertapplication', 'return' => 'value'));
+        try {
+          $scRelationshipTypeId = civicrm_api3('RelationshipType', 'Getvalue', array('return' => 'id', 'name_a_b' => 'Sector Coordinator'));
+          $rtRelationshipTypeId = civicrm_api3('RelationshipType', 'Getvalue', array('return' => 'id', 'name_a_b' => 'Recruitment Team Member'));
+          $query = "CREATE OR REPLACE VIEW pum_expert_applications AS
+            SELECT c1.id AS case_id, c1.status_id, stat.label AS status, stat.weight, exp.display_name AS expert_name,  
+              exp.id AS expert_id, screl.contact_id_b AS sector_coordinator_id, sc.display_name AS sector_coordinator_name, 
+              screl.contact_id_b AS case_manager_id, rtrel.contact_id_b AS recruitment_team_id
+            FROM civicrm_case c1
+            JOIN civicrm_case_contact c2 ON c1.id = c2.case_id      
+            LEFT JOIN civicrm_contact exp ON c2.contact_id = exp.id
+            LEFT JOIN civicrm_option_value stat ON c1.status_id = stat.value AND stat.option_group_id = {$caseStatusOptionGroupId}
+            LEFT JOIN civicrm_relationship screl ON c1.id = screl.case_id AND screl.relationship_type_id = {$scRelationshipTypeId} 
+              AND screl.is_active = 1
+            LEFT JOIN civicrm_relationship rtrel ON c1.id = rtrel.case_id AND rtrel.relationship_type_id = {$rtRelationshipTypeId} 
+              AND rtrel.is_active = 1
+            LEFT JOIN civicrm_contact sc ON screl.contact_id_b = sc.id
+            WHERE c1.case_type_id LIKE '%{$expertCaseTypeId}%' AND c1.is_deleted = 0";
+          CRM_Core_DAO::executeQuery($query);
+        } catch (CiviCRM_API3_Exception $ex) {}
+      } catch (CiviCRM_API3_Exception $ex) {}
+    } catch (CiviCRM_API3_Exception $ex) {
+      throw new Exception(ts('Could not find an option group for case_type in '.__METHOD__
+          .', contact your system administrator. Error from API OptionGroup Getvalue: ').$ex->getMessage());
+    }
+    return true;
+  }
+  /**
+   * Upgrade 1010 - create view for report Expert Application
+   *
+   * @throws Exception when error in API call
+   *
+
   public function upgrade_1010() {
     $this->ctx->log->info('Applying update 1010 add view for report Expert Applications');
     try {
@@ -127,7 +172,7 @@ class CRM_Casereports_Upgrader extends CRM_Casereports_Upgrader_Base {
     try {
       $caseTypeOptionGroupId = civicrm_api3('OptionGroup', 'Getvalue', array('name' => 'case_type', 'return' => 'id'));
       try {
-        $expertCaseTypeId = civicrm_api3('OptionValue', 'Getvalue', 
+        $expertCaseTypeId = civicrm_api3('OptionValue', 'Getvalue',
           array('option_group_id' => $caseTypeOptionGroupId, 'name' => 'Expertapplication', 'return' => 'value'));
         try {
           $scRelationshipTypeId = civicrm_api3('RelationshipType', 'Getvalue', array('return' => 'id', 'name_a_b' => 'Sector Coordinator'));
@@ -159,5 +204,5 @@ class CRM_Casereports_Upgrader extends CRM_Casereports_Upgrader_Base {
           .', contact your system administrator. Error from API OptionGroup Getvalue: ').$ex->getMessage());
     }
     return true;
-  }
+  }*/
 }

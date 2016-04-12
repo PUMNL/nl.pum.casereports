@@ -72,12 +72,12 @@ class CRM_Casereports_Form_Report_Opportunities extends CRM_Report_Form {
           ),
         ),
         'filters' => array(
-          'user_id' => array(
+          'account_id' => array(
             'title' => ts('Opportunities for User'),
             'default' => 0,
             'pseudofield' => 1,
             'type' => CRM_Utils_Type::T_INT,
-            'operatorType' => CRM_Report_Form::OP_SELECT,
+            'operatorType' => CRM_Report_Form::OP_MULTISELECT,
             'options' => $this->_userSelectList,
           ),
           'status_id' => array('title' => ts('Status'),
@@ -149,23 +149,19 @@ class CRM_Casereports_Form_Report_Opportunities extends CRM_Report_Form {
       if (array_key_exists('filters', $table)) {
         foreach ($table['filters'] as $fieldName => $field) {
           $clause = NULL;
-          switch ($fieldName) {
-            case 'user_id':
-              $value = $this->setUserClause();
-              if (!empty($value)) {
-                $clause = $this->_aliases['pum_opportunity'].'.account_id = '.$value;
+          $op = CRM_Utils_Array::value("{$fieldName}_op", $this->_params);
+          // if user id value contains 0 for current user, replace value with current user
+          if ($fieldName == 'account_id') {
+            foreach ($this->_params['user_id_value'] as $paramKey => $userIdValue) {
+              if ($userIdValue == 0) {
+                $session = CRM_Core_Session::singleton();
+                $this->_params['user_id_value'][$paramKey] = $session->get('userID');
               }
-              break;
-            case 'status_id':
-              $op = CRM_Utils_Array::value("{$fieldName}_op", $this->_params);
-              $clause = $this->whereClause($field,
-                $op,
-                CRM_Utils_Array::value("{$fieldName}_value", $this->_params),
-                CRM_Utils_Array::value("{$fieldName}_min", $this->_params),
-                CRM_Utils_Array::value("{$fieldName}_max", $this->_params)
-              );
-              break;
+            }
           }
+          $clause = $this->whereClause($field, $op, CRM_Utils_Array::value("{$fieldName}_value", $this->_params),
+            CRM_Utils_Array::value("{$fieldName}_min", $this->_params),
+            CRM_Utils_Array::value("{$fieldName}_max", $this->_params));
           if (!empty($clause)) {
             $clauses[] = $clause;
           }
@@ -262,18 +258,5 @@ class CRM_Casereports_Form_Report_Opportunities extends CRM_Report_Form {
     } catch (CiviCRM_API3_Exception $ex) {
       $this->_userSelectList = array(0 => 'current user');
     }
-  }
-
-  /**
-   * Method to add the user clause for where
-   */
-  private function setUserClause() {
-    if (!isset($this->_params['user_id_value']) || empty($this->_params['user_id_value'])) {
-      $session = CRM_Core_Session::singleton();
-      $userId = $session->get('userID');
-    } else {
-      $userId = $this->_params['user_id_value'];
-    }
-    return $userId;
   }
 }

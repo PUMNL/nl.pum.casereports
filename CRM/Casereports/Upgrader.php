@@ -111,7 +111,7 @@ class CRM_Casereports_Upgrader extends CRM_Casereports_Upgrader_Base {
   }
 
   /**
-   * Upgrade 1010 - create view for report Expert Application before contact segment
+   * Upgrade 1003 - create view for report Expert Application before contact segment
    * 
    * @throws Exception when error in API call
    */
@@ -153,6 +153,44 @@ class CRM_Casereports_Upgrader extends CRM_Casereports_Upgrader_Base {
       throw new Exception(ts('Could not find an option group for case_type in '.__METHOD__
           .', contact your system administrator. Error from API OptionGroup Getvalue: ').$ex->getMessage());
     }
+    return true;
+  }
+
+  /**
+   * Upgrade 1004 - create view for Opportunity report
+   * @throws Exception when error in API call
+   */
+
+  public function upgrade_1004() {
+    $this->ctx->log->info('Applying update 1004 add view for report Opportunities');
+    try {
+      $caseStatusOptionGroupId = civicrm_api3('OptionGroup', 'Getvalue', array('name' => 'case_status', 'return' => 'id'));
+    } catch (CiviCRM_API3_Exception $ex) {
+      throw new Exception(ts('Could not find an option group for case_status in '.__METHOD__
+          .', contact your system administrator. Error from API OptionGroup Getvalue: ').$ex->getMessage());
+    }
+      $caseTypeOptionGroupId = civicrm_api3('OptionGroup', 'Getvalue', array('name' => 'case_type', 'return' => 'id'));
+        $opportunityCaseTypeId = civicrm_api3('OptionValue', 'Getvalue',
+          array('option_group_id' => $caseTypeOptionGroupId, 'name' => 'Opportunity', 'return' => 'value'));
+        $accRelationshipTypeId = civicrm_api3('RelationshipType', 'Getvalue', array('return' => 'id', 'name_a_b' => 'Account Holder'));
+        $opportunityCustomGroup = civicrm_api3('CustomGroup', 'Getsingle', array('name' => 'Opportunity Outline'));
+        $quoteAmountColumn = civicrm_api3('CustomField', 'Getvalue', array('custom_group_id' => $opportunityCustomGroup['id'], 'name' => 'Quote_amount_', 'return' => 'column_name'));
+        $deadlineColumn = civicrm_api3('CustomField', 'Getvalue', array('custom_group_id' => $opportunityCustomGroup['id'], 'name' => 'Deadline', 'return' => 'column_name'));
+        $query = "CREATE OR REPLACE VIEW pum_opportunity AS
+            SELECT cascont.case_id, cc.subject, contact.display_name AS client_name, 
+            cascont.contact_id AS client_id, acchld.display_name AS account_name, acchld.id AS account_id, 
+            {$quoteAmountColumn} AS quote_amount, {$deadlineColumn} AS deadline, cc.status_id, status.label AS status, status.weight
+            FROM civicrm_case cc
+            LEFT JOIN civicrm_case_contact cascont ON cc.id = cascont.case_id
+            JOIN civicrm_contact contact ON cascont.contact_id = contact.id
+            LEFT JOIN civicrm_relationship rel ON rel.case_id = cc.id 
+              AND rel.relationship_type_id = {$accRelationshipTypeId}
+            LEFT JOIN civicrm_contact acchld ON acchld.id = rel.contact_id_b
+            LEFT JOIN {$opportunityCustomGroup['table_name']} opp ON opp.entity_id = cc.id
+            LEFT JOIN civicrm_option_value status ON cc.status_id = status.value 
+              AND status.option_group_id = {$caseStatusOptionGroupId}
+            WHERE cc.case_type_id LIKE '%{$opportunityCaseTypeId}%' AND cc.is_deleted = 0";
+          CRM_Core_DAO::executeQuery($query);
     return true;
   }
   /**

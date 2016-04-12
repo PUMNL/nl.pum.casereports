@@ -152,10 +152,10 @@ class CRM_Casereports_Form_Report_Opportunities extends CRM_Report_Form {
           $op = CRM_Utils_Array::value("{$fieldName}_op", $this->_params);
           // if user id value contains 0 for current user, replace value with current user
           if ($fieldName == 'account_id') {
-            foreach ($this->_params['user_id_value'] as $paramKey => $userIdValue) {
+            foreach ($this->_params['account_id_value'] as $paramKey => $userIdValue) {
               if ($userIdValue == 0) {
                 $session = CRM_Core_Session::singleton();
-                $this->_params['user_id_value'][$paramKey] = $session->get('userID');
+                $this->_params['account_id_value'][$paramKey] = $session->get('userID');
               }
             }
           }

@@ -31,6 +31,7 @@
     {/if}
     <table class="report-layout display">
         {capture assign="tableHeader"}
+            <th colspan="1">&nbsp;</th>
             {foreach from=$columnHeaders item=header key=field}
                 {assign var=class value=""}
                 {if $header.type eq 1024 OR $header.type eq 1 OR $header.type eq 512}

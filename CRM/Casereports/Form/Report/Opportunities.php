@@ -245,18 +245,23 @@ class CRM_Casereports_Form_Report_Opportunities extends CRM_Report_Form {
    * @access private
    */
   private function setUserSelectList() {
-    try {
-      $accRelTypeId = civicrm_api3('RelationshipType', 'Getvalue', array('name_a_b' => 'Account Holder', 'return' => 'id'));
-      $query = "SELECT DISTINCT(rel.contact_id_b), cc.display_name 
-        FROM civicrm_relationship rel JOIN civicrm_contact cc ON rel.contact_id_b = cc.id
-        WHERE rel.relationship_type_id = %1 ORDER BY cc.display_name";
-      $dao = CRM_Core_DAO::executeQuery($query, array(1 => array($accRelTypeId, 'Integer')));
-      $this->_userSelectList = array(0 => 'current user');
-      while ($dao->fetch()) {
-        $this->_userSelectList[$dao->contact_id_b] = $dao->display_name;
-      }
-    } catch (CiviCRM_API3_Exception $ex) {
-      $this->_userSelectList = array(0 => 'current user');
+    $result = array();
+    $roleId = db_query("SELECT rid FROM {role} where (name = 'Business Development')")
+      ->fetchField();
+    $userQuery = db_select('users_roles', 'ur')
+      ->condition('ur.rid', $roleId, '=')
+      ->fields('ur', array('uid'));
+    $users = $userQuery->execute();
+    foreach ($users as $user) {
+      try {
+        $contactId = (int) civicrm_api3('UFMatch', 'Getvalue', array('uf_id' => $user->uid, 'return' => 'contact_id'));
+        try {
+      $contactName = (string) civicrm_api3('Contact', 'Getvalue', array('id' => $contactId, 'return' => 'display_name'));
+          $result[$contactId] = $contactName;
+        } catch (CiviCRM_API3_Exception $ex) {}
+      } catch (CiviCRM_API3_Exception $ex) {}
     }
+    asort($result);
+    $this->_userSelectList = array(0 => 'current user') + $result;
   }
 }

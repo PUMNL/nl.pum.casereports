@@ -276,7 +276,7 @@ class CRM_Casereports_Form_Report_MainActivities extends CRM_Report_Form {
                 $clause = "({$pum}.expert_id = {$value} OR {$pum}.representative_id = {$value}
                 OR {$pum}.country_coordinator_id = {$value} OR {$pum}.project_officer_id = {$value}
                 OR {$pum}.project_manager_id = {$value} OR {$pum}.sector_coordinator_id = {$value}
-                OR {$pum}.counsellor_id = {$value})";
+                OR {$pum}.counsellor_id = {$value} OR {$pum}.business_coordinator_id = {$value})";
               }
               $op = NULL;
             }

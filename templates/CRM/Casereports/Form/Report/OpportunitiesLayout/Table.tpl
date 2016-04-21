@@ -31,7 +31,6 @@
     {/if}
     <table class="report-layout display">
         {capture assign="tableHeader"}
-            <th colspan="1">&nbsp;</th>
             {foreach from=$columnHeaders item=header key=field}
                 {assign var=class value=""}
                 {if $header.type eq 1024 OR $header.type eq 1 OR $header.type eq 512}
@@ -59,7 +58,7 @@
         {if !$sections} {* section headers and sticky headers aren't playing nice yet *}
             <thead class="sticky">
             <tr>
-                <th></th>
+              <th>&nbsp;</th>
                 {$tableHeader}
         </tr>
         </thead>
@@ -89,7 +88,7 @@
                         </h{$h}>
                     </th></tr>
                     {if $smarty.foreach.sections.last}
-                        <tr>{$l}$tableHeader{$r}</tr>
+                        <tr><th>&nbsp;</th>{$l}$tableHeader{$r}</tr>
                     {/if}
                 {$l}/if{$r}
             {/foreach}

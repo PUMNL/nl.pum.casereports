@@ -19,6 +19,7 @@ class CRM_Casereports_Upgrader extends CRM_Casereports_Upgrader_Base {
   /**
    * Method to create a view used for report My Expert Applications
    *
+   * @throws Exception when error from API
    * @access protected
    */
   protected function createViewMyExpertApplication() {
@@ -103,6 +104,28 @@ class CRM_Casereports_Upgrader extends CRM_Casereports_Upgrader_Base {
     WHERE cc.is_deleted = 0";
     CRM_Core_DAO::executeQuery($query);
   }
+
+  /**
+   * Method to create view for pum projects
+   */
+  protected function createPumProjectsView() {
+    $query = "CREATE OR REPLACE VIEW pum_projects_view AS
+    SELECT proj.id AS project_id, proj.title AS project_name, proj.start_date, proj.end_date, proj.projectmanager_id,  
+      prjmngr.display_name as projectmanager_name, proj.programme_id, proj.country_id, cntry.display_name AS country_name, 
+      proj.customer_id, cst.display_name AS customer_name, prog.title AS programme_name, prog.manager_id AS programme_manager_id, 
+      prgmngr.display_name AS programme_manager_name, proj.anamon_id AS anamon_id, 
+      proj.sector_coordinator_id AS sector_coordinator_id, proj.country_coordinator_id AS country_coordinator_id,
+      proj.project_officer_id AS project_officer_id
+      FROM civicrm_project proj
+      LEFT JOIN civicrm_programme prog ON proj.programme_id = prog.id
+      LEFT JOIN civicrm_contact prjmngr ON proj.projectmanager_id = prjmngr.id
+      LEFT JOIN civicrm_contact cntry ON proj.country_id = cntry.id
+      LEFT JOIN civicrm_contact cst ON proj.customer_id = cst.id
+      LEFT JOIN civicrm_contact prgmngr ON prog.manager_id = prgmngr.id
+      WHERE proj.is_active = 1";
+    CRM_Core_DAO::executeQuery($query);
+  }
+
 
   /**
    * Upgrade 1001 change column ma_expert_approval for n/a value
@@ -256,11 +279,19 @@ class CRM_Casereports_Upgrader extends CRM_Casereports_Upgrader_Base {
 
   /**
    * Upgrade 1010 - create view for report Expert Application
-   *
-   * @throws Exception when error in API call
    */
   public function upgrade_1010() {
     $this->ctx->log->info('Applying update 1010 add view for report Expert Applications');
+    $this->createViewMyExpertApplication();
+    return true;
+  }
+
+  /**
+   * Upgrade 1020 - create view for report Pum Projects
+   */
+  public function upgrade_1020() {
+    $this->ctx->log->info('Applying update 1020 add view for report PUM Projects');
+    $this->createPumProjectsView();
     return true;
   }
 

@@ -58,7 +58,7 @@
         {if !$sections} {* section headers and sticky headers aren't playing nice yet *}
             <thead class="sticky">
             <tr>
-                <th></th>
+                <th>&nbsp;</th>
                 {$tableHeader}
         </tr>
         </thead>
@@ -88,7 +88,7 @@
                         </h{$h}>
                     </th></tr>
                     {if $smarty.foreach.sections.last}
-                        <tr>{$l}$tableHeader{$r}</tr>
+                        <tr><th>&nbsp;</th>{$l}$tableHeader{$r}</tr>
                     {/if}
                 {$l}/if{$r}
             {/foreach}

@@ -210,8 +210,7 @@ class CRM_Casereports_Upgrader extends CRM_Casereports_Upgrader_Base {
    * Upgrade 1010 - create view for report Expert Application
    *
    * @throws Exception when error in API call
-   *
-
+   */
   public function upgrade_1010() {
     $this->ctx->log->info('Applying update 1010 add view for report Expert Applications');
     try {
@@ -255,5 +254,5 @@ class CRM_Casereports_Upgrader extends CRM_Casereports_Upgrader_Base {
           .', contact your system administrator. Error from API OptionGroup Getvalue: ').$ex->getMessage());
     }
     return true;
-  }*/
+  }
 }

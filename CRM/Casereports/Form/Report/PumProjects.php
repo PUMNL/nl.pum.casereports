@@ -153,6 +153,9 @@ class CRM_Casereports_Form_Report_PumProjects extends CRM_Report_Form {
    */
   function where() {
     $clauses = array();
+    // issue 2847 only select if end date is empty or later than or today
+    $nowDate = date('Y-m-d');
+    $clauses[] = "({$this->_aliases['project']}.end_date IS NULL OR {$this->_aliases['project']}.end_date >= '{$nowDate}')";
     $this->_having = '';
     foreach ($this->_columns as $tableName => $table) {
       if (array_key_exists('filters', $table)) {

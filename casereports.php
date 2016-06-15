@@ -11,9 +11,19 @@ require_once 'casereports.civix.php';
 function casereports_civicrm_post($op, $objectName, $objectId, &$objectRef) {
   if ($objectName == 'Activity') {
     if (isset($objectRef->case_id) && !empty($objectRef->case_id)) {
-      CRM_Casereports_Activity::post($op, $objectRef);
+      CRM_Casereports_Activity::post($op, $objectId, $objectRef);
     }
   }
+}
+
+/**
+ * Implements hook civicrm_custom()
+ * Process custom groups
+ *
+ * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_custom
+ */
+function casereports_civicrm_custom($op, $groupId, $entityId, &$params) {
+  CRM_Casereports_Activity::custom($op, $groupId, $entityId, $params);
 }
 /**
  * Implements hook_civicrm_config().

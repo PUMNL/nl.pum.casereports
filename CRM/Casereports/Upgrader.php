@@ -131,6 +131,72 @@ class CRM_Casereports_Upgrader extends CRM_Casereports_Upgrader_Base {
     CRM_Core_DAO::executeQuery($query);
   }
 
+  /**
+   * Method to create view for pum project intake
+   */
+  protected function createPumProjectIntakeView() {
+    try {
+      $caseStatusOptionGroupId = civicrm_api3('OptionGroup', 'Getvalue',
+        array('name' => 'case_status', 'return' => 'id'));
+    } catch (CiviCRM_API3_Exception $ex) {
+      throw new Exception("Could not find a single option group with name case_status, contact your system administrator. 
+      Error from API OptionGroup Getvalue: ".$ex->getMessage());
+    }
+    try {
+      $repRelationshipTypeId = civicrm_api3('RelationshipType', 'Getvalue',
+        array('name_a_b' => 'Representative is', 'return' => 'id'));
+    } catch (CiviCRM_API3_Exception $ex) {
+      throw new Exception("Could not find a single relationship type with name_a_b Representative is, contact your system administrator. 
+      Error from API RelationshipType Getvalue: ".$ex->getMessage());
+    }
+    try {
+      $projectIntakeCaseTypeId = civicrm_api3('OptionValue', 'Getvalue',
+        array('option_group_id' => 'case_type', 'name' => 'Projectintake','return' => 'value'));
+    } catch (CiviCRM_API3_Exception $ex) {
+      throw new Exception("Could not find a single case type with name Projectintake, contact your system administrator. 
+      Error from API OptionValue Getvalue: ".$ex->getMessage());
+    }
+    try {
+      $openCaseActivityTypeId = civicrm_api3('OptionValue', 'Getvalue',
+        array('option_group_id' => 'activity_type', 'name' => 'Open Case','return' => 'value'));
+    } catch (CiviCRM_API3_Exception $ex) {
+      throw new Exception("Could not find a single activity type with name Open Case, contact your system administrator. 
+      Error from API OptionValue Getvalue: ".$ex->getMessage());
+    }
+    $query = "CREATE OR REPLACE VIEW pum_project_intake_view AS
+      SELECT DISTINCT(cc.id) AS case_id, cc.subject AS case_subject, cc.status_id AS case_status_id, cus.id AS customer_id,
+       oc.activity_date_time AS date_submission, cus.display_name AS customer_name, cuscntry.name AS customer_country_name, 
+       ovsts.label AS case_status, reprel.contact_id_b AS representative_id, rep.display_name AS representative_name, 
+       pum.assess_rep_date, pum.assess_rep_customer, pum.assess_cc_date, pum.assess_cc_customer, pum.assess_sc_date, 
+       pum.assess_sc_customer, pum.assess_anamon_date, pum.assess_anamon_customer, proj.anamon_id, proj.country_coordinator_id, 
+       proj.project_officer_id, proj.sector_coordinator_id, proj.projectmanager_id, prog.manager_id AS programme_manager_id
+      FROM civicrm_case cc 
+      JOIN civicrm_case_activity casact ON cc.id = casact.case_id
+      JOIN civicrm_activity oc ON casact.activity_id = oc.id AND oc.is_current_revision = %1 AND oc.is_test = %5 AND oc.activity_type_id = %6
+      LEFT JOIN civicrm_case_project cp ON cc.id = cp.case_id
+  	  LEFT JOIN civicrm_project proj ON cp.project_id = proj.id
+      LEFT JOIN civicrm_programme prog ON proj.programme_id = prog.id      
+      LEFT JOIN civicrm_case_contact cascus ON cc.id = cascus.case_id
+      LEFT JOIN civicrm_contact cus ON cascus.contact_id = cus.id
+      LEFT JOIN civicrm_address cusadr ON cus.id = cusadr.contact_id AND is_primary = %1
+      LEFT JOIN civicrm_country cuscntry ON cusadr.country_id = cuscntry.id
+      LEFT JOIN civicrm_option_value ovsts ON cc.status_id = ovsts.value AND ovsts.option_group_id = %2
+      LEFT JOIN civicrm_relationship reprel ON cc.id = reprel.case_id AND reprel.relationship_type_id = 
+        %3 AND reprel.is_active = %1
+      LEFT JOIN civicrm_contact rep ON reprel.contact_id_b = rep.id
+      LEFT JOIN civicrm_pum_case_reports pum ON cc.id = pum.case_id
+      WHERE cc.case_type_id LIKE %4 AND cc.is_deleted = %5";
+    $params = array(
+      1 => array(1, 'Integer'),
+      2 => array($caseStatusOptionGroupId, 'Integer'),
+      3 => array($repRelationshipTypeId, 'Integer'),
+      4 => array('%'.$projectIntakeCaseTypeId.'%', 'String'),
+      5 => array(0, 'Integer'),
+      6 => array($openCaseActivityTypeId, 'Integer')
+    );
+    CRM_Core_DAO::executeQuery($query, $params);
+  }
+
 
   /**
    * Upgrade 1001 change column ma_expert_approval for n/a value
@@ -310,4 +376,31 @@ class CRM_Casereports_Upgrader extends CRM_Casereports_Upgrader_Base {
     return true;
   }
 
+  /**
+   * Upgrade 1025 - add data for report projectintake
+   */
+  public function upgrade_1025() {
+    $this->ctx->log->info('Applying update 1025 add data and view for projectintake');
+    // add columns assess_rep/cc/sc/anamon_date/customer
+    if (CRM_Core_DAO::checkTableExists('civicrm_pum_case_reports')) {
+      $columns = array(
+        '0' => array('name' => 'assess_rep_date', 'type' => 'DATE'),
+        '1' => array('name' => 'assess_rep_customer', 'type' => 'VARCHAR(45)'),
+        '2' => array('name' => 'assess_cc_date', 'type' => 'DATE'),
+        '3' => array('name' => 'assess_cc_customer', 'type' => 'VARCHAR(45)'),
+        '4' => array('name' => 'assess_sc_date', 'type' => 'DATE'),
+        '5' => array('name' => 'assess_sc_customer', 'type' => 'VARCHAR(45)'),
+        '6' => array('name' => 'assess_anamon_date', 'type' => 'DATE'),
+        '7' => array('name' => 'assess_anamon_customer', 'type' => 'VARCHAR(45)'),
+      );
+      foreach ($columns as $column) {
+        if (!CRM_Core_DAO::checkFieldExists('civicrm_pum_case_reports', $column['name'])) {
+          CRM_Core_DAO::executeQuery('ALTER TABLE civicrm_pum_case_reports ADD COLUMN ' . $column['name']
+            . ' ' . $column['type'] . ' DEFAULT NULL');
+        }
+      }
+    }
+    $this->createPumProjectIntakeView();
+    return true;
+  }
 }

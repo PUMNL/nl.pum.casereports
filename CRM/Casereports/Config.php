@@ -14,10 +14,26 @@ class CRM_Casereports_Config {
    */
   static private $_singleton = NULL;
 
+  // properties for main activity
   protected $_maAcceptActivityTypeId = NULL;
   protected $_maRejectActivityTypeId = NULL;
   protected $_maBriefingActivityTypeId = NULL;
   protected $_maAcceptCustomGroup = array();
+  
+  // properties for project intake
+  protected $_assessRepActivityTypeId = NULL;
+  protected $_assessCCActivityTypeId = NULL;
+  protected $_assessSCActivityTypeId = NULL;
+  protected $_assessAnamonActivityTypeId = NULL;
+  protected $_assessRepCustomGroupId = NULL;
+  protected $_assessRepCustomTable = NULL;
+  protected $_assessCCCustomTable = NULL;
+  protected $_assessSCCustomTable = NULL;
+  protected $_assessAnamonCustomTable = NULL;
+  protected $_assessRepCustomColumn = NULL;
+  protected $_assessCCCustomColumn = NULL;
+  protected $_assessSCCustomColumn = NULL;
+  protected $_assessAnamonCustomColumn = NULL;
 
   /**
    * CRM_Casereports_Config constructor.
@@ -26,11 +42,146 @@ class CRM_Casereports_Config {
     $this->setActivityTypes(array(
       '_maAcceptActivityTypeId' => 'Accept Main Activity Proposal',
       '_maRejectActivityTypeId' => 'Reject Main Activity Proposal',
-      '_maBriefingActivityTypeId' => 'Briefing Expert'
+      '_maBriefingActivityTypeId' => 'Briefing Expert',
+      '_assessRepActivityTypeId' => 'Assessment Project Request by Rep',
+      '_assessCCActivityTypeId' => 'Intake Customer by CC',
+      '_assessSCActivityTypeId' => 'Intake Customer by SC',
+      '_assessAnamonActivityTypeId' => 'Intake Customer by Anamon',
     ));
     $this->setCustomGroups(array(
-     '_maAcceptCustomGroup' => 'Add_Keyqualifications'
+      '_maAcceptCustomGroup' => 'Add_Keyqualifications',
     ));
+    $this->setAssessIntakeCustomData();
+  }
+
+  /**
+   * Getter for Assessment Project Intake by Anamon by Representative Custom Column Name
+   *
+   * @return array
+   * @access public
+   */
+  public function getAssessAnamonCustomColumn() {
+    return $this->_assessAnamonCustomColumn;
+  }
+
+  /**
+   * Getter for Assessment Project Intake by Country Coordinator by Representative Custom Column Name
+   *
+   * @return array
+   * @access public
+   */
+  public function getAssessCCCustomColumn() {
+    return $this->_assessCCCustomColumn;
+  }
+
+  /**
+   * Getter for Assessment Project Intake by Anamon by Representative Custom Column Name
+   *
+   * @return array
+   * @access public
+   */
+  public function getAssessRepCustomColumn() {
+    return $this->_assessRepCustomColumn;
+  }
+
+  /**
+   * Getter for Assessment Project Intake by Anamon by Sector Coordinator Custom Column Name
+   *
+   * @return array
+   * @access public
+   */
+  public function getAssessSCCustomColumn() {
+    return $this->_assessSCCustomColumn;
+  }
+
+  /**
+   * Getter for Assessment Project Intake by Anamon by Representative Custom Table Name
+   *
+   * @return array
+   * @access public
+   */
+  public function getAssessAnamonCustomTable() {
+    return $this->_assessAnamonCustomTable;
+  }
+
+  /**
+   * Getter for Assessment Project Intake by Country Coordinator by Representative Custom Table Name
+   *
+   * @return array
+   * @access public
+   */
+  public function getAssessCCCustomTable() {
+    return $this->_assessCCCustomTable;
+  }
+
+  /**
+   * Getter for Assessment Project Intake by Anamon by Representative Custom Table Name
+   *
+   * @return array
+   * @access public
+   */
+  public function getAssessRepCustomTable() {
+    return $this->_assessRepCustomTable;
+  }
+
+  /**
+   * Getter for Assessment Project Intake by Anamon by Representative Custom Group Id
+   *
+   * @return array
+   * @access public
+   */
+  public function getAssessRepCustomGroupId() {
+    return $this->_assessRepCustomGroupId;
+  }
+
+  /**
+   * Getter for Assessment Project Intake by Anamon by Sector Coordinator Custom Table Name
+   *
+   * @return array
+   * @access public
+   */
+  public function getAssessSCCustomTable() {
+    return $this->_assessSCCustomTable;
+  }
+
+  /**
+   * Getter for Assessment Project Intake by Rep (open case activity)
+   *
+   * @return array
+   * @access public
+   */
+  public function getAssessRepActivityTypeId() {
+    return $this->_assessRepActivityTypeId;
+  }
+
+  /**
+   * Getter for Assessment Project Intake by CC
+   *
+   * @return array
+   * @access public
+   */
+  public function getAssessCCActivityTypeId() {
+    return $this->_assessCCActivityTypeId;
+  }
+  
+  /**
+   * Getter for Assessment Project Intake by SC
+   *
+   * @return array
+   * @access public
+   */
+  public function getAssessSCActivityTypeId() {
+    return $this->_assessSCActivityTypeId;
+  }
+  
+  /**
+   * Getter for Assessment Project Intake by SC
+   *
+   * @return array
+   * @access public
+   */
+  public function getAssessAnamonActivityTypeId() {
+    return $this->_assessAnamonActivityTypeId;
   }
 
   /**
@@ -130,6 +281,47 @@ class CRM_Casereports_Config {
   }
 
   /**
+   * Method to get the table and column names of the custom fields for Assessement ProjectIntake
+   *
+   * @access private
+   */
+  private function setAssessIntakeCustomData() {
+    $customGroupNames = array(
+      '_assessSCCustomTable' => array(
+        'group_name' => 'Intake_Customer_by_SC',
+        'field_property' => '_assessSCCustomColumn',
+        'field_name' => 'Conclusion_Do_you_want_to_approve_this_customer_'),
+      '_assessRepCustomTable' => array(
+        'group_name' => 'Intake',
+        'field_property' => '_assessRepCustomColumn',
+        'field_name' => 'Assessment_Rep'),
+      '_assessCCCustomTable' => array(
+        'group_name' => 'Intake_Customer_by_CC',
+        'field_property' => '_assessCCCustomColumn',
+        'field_name' => 'Conclusion_Do_you_want_to_approve_this_customer_'),
+      '_assessAnamonCustomTable' => array(
+        'group_name' => 'Intake_Customer_by_Anamon',
+        'field_property' => '_assessAnamonCustomColumn',
+        'field_name' => 'Do_you_approve_the_project_')
+    );
+    try {
+      foreach ($customGroupNames as $tableProperty => $element) {
+        $customGroup = civicrm_api3('CustomGroup', 'Getsingle', array('name' => $element['group_name']));
+        $this->$tableProperty = $customGroup['table_name'];
+        if ($tableProperty == "_assessRepCustomTable") {
+          $this->_assessRepCustomGroupId = $customGroup['id'];
+        }
+        $fieldProperty = $element['field_property'];
+        $this->$fieldProperty = civicrm_api3('CustomField', 'Getvalue', array(
+          'custom_group_id' => $customGroup['id'],
+          'name' => $element['field_name'],
+          'return' => 'column_name'
+        ));
+      }
+    } catch (CiviCRM_API3_Exception $ex) {}
+  }
+
+  /**
    * Function to return singleton object
    *
    * @return object $_singleton
@@ -142,5 +334,4 @@ class CRM_Casereports_Config {
     }
     return self::$_singleton;
   }
-
 }

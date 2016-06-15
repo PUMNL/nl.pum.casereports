@@ -210,8 +210,6 @@ FROM civicrm_case_activity ca JOIN civicrm_activity act ON ca.activity_id = act.
             if (!in_array($clause, $pumFields)) {
               $pumFields[] = "assess_sc_date = %" . $pumIndex;
               $pumParams[$pumIndex] = array(date('Y-m-d', strtotime($actDao->activity_date_time)), 'String');
-            } else {
-              $pumIndex--;
             }
           }
           $scQuery = "SELECT ".$this->_assessSCCustomColumn." FROM ".$this->_assessSCCustomTable." WHERE entity_id = %1";
@@ -221,8 +219,6 @@ FROM civicrm_case_activity ca JOIN civicrm_activity act ON ca.activity_id = act.
             if (!in_array($clause, $pumFields)) {
               $pumFields[] = "assess_sc_customer = %" . $pumIndex;
               $pumParams[$pumIndex] = array($scCustomer, 'String');
-            } else {
-              $pumIndex--;
             }
           }
           break;
@@ -232,8 +228,6 @@ FROM civicrm_case_activity ca JOIN civicrm_activity act ON ca.activity_id = act.
             if (!in_array($clause, $pumFields)) {
               $pumFields[] = "assess_rep_date = %" . $pumIndex;
               $pumParams[$pumIndex] = array(date('Y-m-d', strtotime($actDao->activity_date_time)), 'String');
-            } else {
-              $pumIndex--;
             }
           }
           $repQuery = "SELECT ".$this->_assessRepCustomColumn." FROM ".$this->_assessRepCustomTable." WHERE entity_id = %1";
@@ -243,8 +237,6 @@ FROM civicrm_case_activity ca JOIN civicrm_activity act ON ca.activity_id = act.
             if (!in_array($clause, $pumFields)) {
               $pumFields[] = "assess_rep_customer = %" . $pumIndex;
               $pumParams[$pumIndex] = array($repCustomer, 'String');
-            } else {
-              $pumIndex--;
             }
           }
           break;
@@ -254,8 +246,6 @@ FROM civicrm_case_activity ca JOIN civicrm_activity act ON ca.activity_id = act.
             if (!in_array($clause, $pumFields)) {
               $pumFields[] = "assess_cc_date = %" . $pumIndex;
               $pumParams[$pumIndex] = array(date('Y-m-d', strtotime($actDao->activity_date_time)), 'String');
-            } else {
-              $pumIndex--;
             }
           }
           $ccQuery = "SELECT ".$this->_assessCCCustomColumn." FROM ".$this->_assessCCCustomTable." WHERE entity_id = %1";
@@ -265,8 +255,6 @@ FROM civicrm_case_activity ca JOIN civicrm_activity act ON ca.activity_id = act.
             if (!in_array($clause, $pumFields)) {
               $pumFields[] = "assess_cc_customer = %" . $pumIndex;
               $pumParams[$pumIndex] = array($ccCustomer, 'String');
-            } else {
-              $pumIndex--;
             }
           }
           break;
@@ -276,8 +264,6 @@ FROM civicrm_case_activity ca JOIN civicrm_activity act ON ca.activity_id = act.
             if (!in_array($clause, $pumFields)) {
               $pumFields[] = "assess_anamon_date = %" . $pumIndex;
               $pumParams[$pumIndex] = array(date('Y-m-d', strtotime($actDao->activity_date_time)), 'String');
-            } else {
-              $pumIndex--;
             }
           }
           $anamonQuery = "SELECT ".$this->_assessAnamonCustomColumn." FROM ".$this->_assessAnamonCustomTable." WHERE entity_id = %1";
@@ -287,8 +273,6 @@ FROM civicrm_case_activity ca JOIN civicrm_activity act ON ca.activity_id = act.
             if (!in_array($clause, $pumFields)) {
               $pumFields[] = "assess_anamon_customer = %" . $pumIndex;
               $pumParams[$pumIndex] = array($anaMonCustomer, 'String');
-            } else {
-              $pumIndex--;
             }
           }
           break;

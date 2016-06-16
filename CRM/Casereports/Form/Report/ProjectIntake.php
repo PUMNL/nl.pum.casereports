@@ -258,19 +258,19 @@ class CRM_Casereports_Form_Report_ProjectIntake extends CRM_Report_Form {
       }
       // date fields formatting
       if (isset($row['projectintake_date_submission']) && !empty($row['projectintake_date_submission'])) {
-        $rows[$rowNum]['projectintake_date_submission'] = date('j M Y', strtotime($row['projectintake_date_submission']));
+        $rows[$rowNum]['projectintake_date_submission'] = date('Y M j', strtotime($row['projectintake_date_submission']));
       }
       if (isset($row['projectintake_assess_rep_date']) && !empty($row['projectintake_assess_rep_date'])) {
-        $rows[$rowNum]['projectintake_assess_rep_date'] = date('j M Y', strtotime($row['projectintake_assess_rep_date']));
+        $rows[$rowNum]['projectintake_assess_rep_date'] = date('Y M j', strtotime($row['projectintake_assess_rep_date']));
       }
       if (isset($row['projectintake_assess_cc_date']) && !empty($row['projectintake_assess_cc_date'])) {
-        $rows[$rowNum]['projectintake_assess_cc_date'] = date('j M Y', strtotime($row['projectintake_assess_cc_date']));
+        $rows[$rowNum]['projectintake_assess_cc_date'] = date('Y M j', strtotime($row['projectintake_assess_cc_date']));
       }
       if (isset($row['projectintake_assess_sc_date']) && !empty($row['projectintake_assess_sc_date'])) {
-        $rows[$rowNum]['projectintake_assess_sc_date'] = date('j M Y', strtotime($row['projectintake_assess_sc_date']));
+        $rows[$rowNum]['projectintake_assess_sc_date'] = date('Y M j', strtotime($row['projectintake_assess_sc_date']));
       }
       if (isset($row['projectintake_assess_anamon_date']) && !empty($row['projectintake_assess_anamon_date'])) {
-        $rows[$rowNum]['projectintake_assess_anamon_date'] = date('j M Y', strtotime($row['projectintake_assess_anamon_date']));
+        $rows[$rowNum]['projectintake_assess_anamon_date'] = date('Y M j', strtotime($row['projectintake_assess_anamon_date']));
       }
     }
   }

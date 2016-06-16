@@ -187,7 +187,8 @@ class CRM_Casereports_Import {
     // get relevant activities
     $actQuery = "SELECT act.id, act.activity_date_time, act.activity_type_id
 FROM civicrm_case_activity ca JOIN civicrm_activity act ON ca.activity_id = act.id AND act.is_current_revision = %6
- AND act.is_test = %7 AND act.is_deleted = %7 AND act.activity_type_id IN (%1, %2, %3, %4) WHERE ca.case_id = %5";
+ AND act.is_test = %7 AND act.is_deleted = %7 AND act.activity_type_id IN (%1, %2, %3, %4) 
+WHERE ca.case_id = %5 ORDER BY act.activity_date_time DESC";
     $actParams = array(
       1 => array($this->_assessSCActivityTypeId, 'Integer'),
       2 => array($this->_assessRepActivityTypeId, 'Integer'),
@@ -201,79 +202,82 @@ FROM civicrm_case_activity ca JOIN civicrm_activity act ON ca.activity_id = act.
     $pumParams = array();
     $pumParams[1] = array($caseId, 'Integer');
     $pumIndex = 1;
+    $gotRepDate = FALSE;
+    $gotSCDate = FALSE;
+    $gotCCDate = FALSE;
+    $gotAnamonDate = FALSE;
+    $gotRep = FALSE;
+    $gotSC = FALSE;
+    $gotCC = FALSE;
+    $gotAnamon = FALSE;
     while ($actDao->fetch()) {
       switch ($actDao->activity_type_id) {
+        // sector coordinator
         case $this->_assessSCActivityTypeId:
-          if (!empty($actDao->activity_date_time)) {
+          if (!empty($actDao->activity_date_time) && !$gotSCDate) {
+            $gotSCDate = TRUE;
             $pumIndex++;
-            $clause = "assess_sc_date = %".$pumIndex;
-            if (!in_array($clause, $pumFields)) {
-              $pumFields[] = "assess_sc_date = %" . $pumIndex;
-              $pumParams[$pumIndex] = array(date('Y-m-d', strtotime($actDao->activity_date_time)), 'String');
-            }
+            $pumFields[] = "assess_sc_date = %" . $pumIndex;
+            $pumParams[$pumIndex] = array(date('Y-m-d', strtotime($actDao->activity_date_time)), 'String');
           }
           $scQuery = "SELECT ".$this->_assessSCCustomColumn." FROM ".$this->_assessSCCustomTable." WHERE entity_id = %1";
           $scCustomer = CRM_Core_DAO::singleValueQuery($scQuery, array(1 => array($actDao->id, 'Integer')));
-          if (!empty($scCustomer)) {
-            $clause = "assess_sc_customer = %".$pumIndex;
-            if (!in_array($clause, $pumFields)) {
-              $pumFields[] = "assess_sc_customer = %" . $pumIndex;
-              $pumParams[$pumIndex] = array($scCustomer, 'String');
-            }
+          if (!empty($scCustomer) && !$gotSC) {
+            $gotSC = TRUE;
+            $pumIndex++;
+            $pumFields[] = "assess_sc_customer = %" . $pumIndex;
+            $pumParams[$pumIndex] = array($scCustomer, 'String');
           }
           break;
+        // representative
         case $this->_assessRepActivityTypeId:
-          if (!empty($actDao->activity_date_time)) {
-            $clause = "assess_rep_date = %".$pumIndex;
-            if (!in_array($clause, $pumFields)) {
-              $pumFields[] = "assess_rep_date = %" . $pumIndex;
-              $pumParams[$pumIndex] = array(date('Y-m-d', strtotime($actDao->activity_date_time)), 'String');
-            }
+          if (!empty($actDao->activity_date_time) && !$gotRepDate) {
+            $gotRepDate = TRUE;
+            $pumIndex++;
+            $pumFields[] = "assess_rep_date = %" . $pumIndex;
+            $pumParams[$pumIndex] = array(date('Y-m-d', strtotime($actDao->activity_date_time)), 'String');
           }
           $repQuery = "SELECT ".$this->_assessRepCustomColumn." FROM ".$this->_assessRepCustomTable." WHERE entity_id = %1";
           $repCustomer = CRM_Core_DAO::singleValueQuery($repQuery, array(1 => array($caseId, 'Integer')));
-          if (!empty($repCustomer)) {
-            $clause = "assess_rep_customer = %".$pumIndex;
-            if (!in_array($clause, $pumFields)) {
-              $pumFields[] = "assess_rep_customer = %" . $pumIndex;
-              $pumParams[$pumIndex] = array($repCustomer, 'String');
-            }
+          if (!empty($repCustomer) && !$gotRep) {
+            $gotRep = TRUE;
+            $pumIndex++;
+            $pumFields[] = "assess_rep_customer = %" . $pumIndex;
+            $pumParams[$pumIndex] = array($repCustomer, 'String');
           }
           break;
+        // country coordinator
         case $this->_assessCCActivityTypeId:
-          if (!empty($actDao->activity_date_time)) {
-            $clause = "assess_cc_date = %".$pumIndex;
-            if (!in_array($clause, $pumFields)) {
-              $pumFields[] = "assess_cc_date = %" . $pumIndex;
-              $pumParams[$pumIndex] = array(date('Y-m-d', strtotime($actDao->activity_date_time)), 'String');
-            }
+          if (!empty($actDao->activity_date_time) && !$gotCCDate) {
+            $gotCCDate = TRUE;
+            $pumIndex++;
+            $pumFields[] = "assess_cc_date = %" . $pumIndex;
+            $pumParams[$pumIndex] = array(date('Y-m-d', strtotime($actDao->activity_date_time)), 'String');
           }
           $ccQuery = "SELECT ".$this->_assessCCCustomColumn." FROM ".$this->_assessCCCustomTable." WHERE entity_id = %1";
           $ccCustomer = CRM_Core_DAO::singleValueQuery($ccQuery, array(1 => array($actDao->id, 'Integer')));
-          if (!empty($ccCustomer)) {
-            $clause = "assess_cc_customer = %".$pumIndex;
-            if (!in_array($clause, $pumFields)) {
-              $pumFields[] = "assess_cc_customer = %" . $pumIndex;
-              $pumParams[$pumIndex] = array($ccCustomer, 'String');
-            }
+          if (!empty($ccCustomer) && !$gotCC) {
+            $gotCC = TRUE;
+            $pumIndex++;
+            $pumFields[] = "assess_cc_customer = %" . $pumIndex;
+            $pumParams[$pumIndex] = array($ccCustomer, 'String');
           }
           break;
+        // anamon
         case $this->_assessAnamonActivityTypeId:
-          if (!empty($actDao->activity_date_time)) {
-            $clause = "assess_anamon_date = %".$pumIndex;
-            if (!in_array($clause, $pumFields)) {
-              $pumFields[] = "assess_anamon_date = %" . $pumIndex;
-              $pumParams[$pumIndex] = array(date('Y-m-d', strtotime($actDao->activity_date_time)), 'String');
-            }
+          if (!empty($actDao->activity_date_time) && !$gotAnamonDate) {
+            $gotAnamonDate = TRUE;
+            $pumIndex++;
+            $pumFields[] = "assess_anamon_date = %" . $pumIndex;
+            $pumParams[$pumIndex] = array(date('Y-m-d', strtotime($actDao->activity_date_time)), 'String');
           }
           $anamonQuery = "SELECT ".$this->_assessAnamonCustomColumn." FROM ".$this->_assessAnamonCustomTable." WHERE entity_id = %1";
           $anaMonCustomer = CRM_Core_DAO::singleValueQuery($anamonQuery, array(1 => array($actDao->id, 'Integer')));
-          if (!empty($anaMonCustomer)) {
-            $clause = "assess_anamon_customer = %".$pumIndex;
-            if (!in_array($clause, $pumFields)) {
-              $pumFields[] = "assess_anamon_customer = %" . $pumIndex;
-              $pumParams[$pumIndex] = array($anaMonCustomer, 'String');
-            }
+          if (!empty($anaMonCustomer) && !$gotAnamon) {
+            $gotAnamon = TRUE;
+            $pumIndex++;
+            $pumFields[] = "assess_anamon_customer = %" . $pumIndex;
+            $pumParams[$pumIndex] = array($anaMonCustomer, 'String');
           }
           break;
       }

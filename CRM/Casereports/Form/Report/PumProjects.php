@@ -404,4 +404,16 @@ class CRM_Casereports_Form_Report_PumProjects extends CRM_Report_Form {
     }
     return $myRoles;
   }
+
+  /**
+   * Overridden parent method orderBy (issue 2995 order by status on weight)
+   */
+  function orderBy() {
+    $this->_orderBy  = "";
+    $this->_orderByArray[] = $this->_aliases['project'].".start_date DESC";
+    if(!empty($this->_orderByArray) && !$this->_rollup == 'WITH ROLLUP'){
+      $this->_orderBy = "ORDER BY " . implode(', ', $this->_orderByArray);
+    }
+    $this->assign('sections', $this->_sections);
+  }
 }

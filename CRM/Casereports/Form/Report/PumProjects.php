@@ -22,6 +22,7 @@ class CRM_Casereports_Form_Report_PumProjects extends CRM_Report_Form {
    * Constructor method
    */
   function __construct() {
+    $this->setReportUserContext();
     $this->setUserSelectList();
     $this->setCountrySelectList();
     $this->setCustomerSelectList();
@@ -416,4 +417,21 @@ class CRM_Casereports_Form_Report_PumProjects extends CRM_Report_Form {
     }
     $this->assign('sections', $this->_sections);
   }
+
+  /**
+   * Set report url as user context
+   * 
+   */
+  private function setReportUserContext() {
+    $session = CRM_Core_Session::singleton();
+    $instanceId = CRM_Core_DAO::singleValueQuery('SELECT id FROM civicrm_report_instance WHERE report_id = %1',
+      array(1 => array('nl.pum.casereports/pumprojects', 'String')));
+    if (!empty($instanceId)) {
+      $session->pushUserContext(CRM_Utils_System::url('civicrm/report/instance/'.$instanceId, 'reset=1', true));
+    } else {
+      $session->pushUserContext(CRM_Utils_System::url('civicrm/dashboard/', 'reset=1', true));
+    }
+  }
+
+
 }

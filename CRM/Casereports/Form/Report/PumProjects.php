@@ -411,7 +411,7 @@ class CRM_Casereports_Form_Report_PumProjects extends CRM_Report_Form {
    */
   function orderBy() {
     $this->_orderBy  = "";
-    $this->_orderByArray[] = $this->_aliases['project'].".start_date DESC";
+    $this->_orderByArray[] = $this->_aliases['project'].".project_id DESC";
     if(!empty($this->_orderByArray) && !$this->_rollup == 'WITH ROLLUP'){
       $this->_orderBy = "ORDER BY " . implode(', ', $this->_orderByArray);
     }

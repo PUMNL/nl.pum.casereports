@@ -13,6 +13,10 @@ CREATE TABLE IF NOT EXISTS civicrm_pum_case_reports (
   assess_sc_customer VARCHAR(45) DEFAULT NULL,
   assess_anamon_date DATE DEFAULT NULL,
   assess_anamon_customer VARCHAR(45) DEFAULT NULL,
+  `anamon_id` int(11) DEFAULT NULL,
+  `country_coordinator_id` int(11) DEFAULT NULL,
+  `project_officer_id` int(11) DEFAULT NULL,
+  `sector_coordinator_id` int(11) DEFAULT NULL,
   PRIMARY KEY (case_id),
   UNIQUE KEY case_id_UNIQUE (case_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;

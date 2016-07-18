@@ -168,8 +168,8 @@ class CRM_Casereports_Upgrader extends CRM_Casereports_Upgrader_Base {
        oc.activity_date_time AS date_submission, cus.display_name AS customer_name, cuscntry.name AS customer_country_name, 
        ovsts.label AS case_status, reprel.contact_id_b AS representative_id, rep.display_name AS representative_name, 
        pum.assess_rep_date, pum.assess_rep_customer, pum.assess_cc_date, pum.assess_cc_customer, pum.assess_sc_date, 
-       pum.assess_sc_customer, pum.assess_anamon_date, pum.assess_anamon_customer, proj.anamon_id, proj.country_coordinator_id, 
-       proj.project_officer_id, proj.sector_coordinator_id, proj.projectmanager_id, prog.manager_id AS programme_manager_id
+       pum.assess_sc_customer, pum.assess_anamon_date, pum.assess_anamon_customer, pum.anamon_id, pum.country_coordinator_id, 
+       pum.project_officer_id, pum.sector_coordinator_id, proj.projectmanager_id, prog.manager_id AS programme_manager_id
       FROM civicrm_case cc 
       JOIN civicrm_case_activity casact ON cc.id = casact.case_id
       JOIN civicrm_activity oc ON casact.activity_id = oc.id AND oc.is_current_revision = %1 AND oc.is_test = %5 AND oc.activity_type_id = %6
@@ -397,6 +397,30 @@ class CRM_Casereports_Upgrader extends CRM_Casereports_Upgrader_Base {
         if (!CRM_Core_DAO::checkFieldExists('civicrm_pum_case_reports', $column['name'])) {
           CRM_Core_DAO::executeQuery('ALTER TABLE civicrm_pum_case_reports ADD COLUMN ' . $column['name']
             . ' ' . $column['type'] . ' DEFAULT NULL');
+        }
+      }
+    }
+    $this->createPumProjectIntakeView();
+    return true;
+  }
+
+  /**
+   * Upgrade 1030 - add data for report projectintake issue 3498
+   */
+  public function upgrade_1030() {
+    $this->ctx->log->info('Applying update 1030 add data and view for projectintake');
+    // add columns assess_rep/cc/sc/anamon_date/customer
+    if (CRM_Core_DAO::checkTableExists('civicrm_pum_case_reports')) {
+      $columns = array(
+        '0' => array('name' => 'anamon_id'),
+        '1' => array('name' => 'country_coordinator_id', 'type' => 'VARCHAR(45)'),
+        '2' => array('name' => 'project_officer_id'),
+        '3' => array('name' => 'sector_coordinator_id'),
+      );
+      foreach ($columns as $column) {
+        if (!CRM_Core_DAO::checkFieldExists('civicrm_pum_case_reports', $column['name'])) {
+          CRM_Core_DAO::executeQuery('ALTER TABLE civicrm_pum_case_reports ADD COLUMN ' . $column['name']
+            . ' INT(11) DEFAULT NULL');
         }
       }
     }

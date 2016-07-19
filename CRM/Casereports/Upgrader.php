@@ -427,4 +427,13 @@ class CRM_Casereports_Upgrader extends CRM_Casereports_Upgrader_Base {
     $this->createPumProjectIntakeView();
     return true;
   }
+
+  /**
+   * Upgrade 1031 - add data for report projectintake issue 3498 country
+   */
+  public function upgrade_1031() {
+    $this->ctx->log->info('Applying update 1031');
+    $this->createPumProjectIntakeView();
+    return true;
+  }
 }

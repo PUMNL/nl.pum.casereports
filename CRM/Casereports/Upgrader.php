@@ -165,10 +165,10 @@ class CRM_Casereports_Upgrader extends CRM_Casereports_Upgrader_Base {
     }
     $query = "CREATE OR REPLACE VIEW pum_project_intake_view AS
       SELECT DISTINCT(cc.id) AS case_id, cc.subject AS case_subject, cc.status_id AS case_status_id, cus.id AS customer_id,
-       oc.activity_date_time AS date_submission, cus.display_name AS customer_name, cuscntry.name AS customer_country_name, 
-       ovsts.label AS case_status, reprel.contact_id_b AS representative_id, rep.display_name AS representative_name, 
-       pum.assess_rep_date, pum.assess_rep_customer, pum.assess_cc_date, pum.assess_cc_customer, pum.assess_sc_date, 
-       pum.assess_sc_customer, pum.assess_anamon_date, pum.assess_anamon_customer, pum.anamon_id, pum.country_coordinator_id, 
+       oc.activity_date_time AS date_submission, cus.display_name AS customer_name, cusadr.country_id AS country_id, 
+       cuscntry.name AS customer_country_name, cc.status_id AS status_id, ovsts.label AS case_status, reprel.contact_id_b AS representative_id, 
+       rep.display_name AS representative_name, pum.assess_rep_date, pum.assess_rep_customer, pum.assess_cc_date, pum.assess_cc_customer, 
+       pum.assess_sc_date, pum.assess_sc_customer, pum.assess_anamon_date, pum.assess_anamon_customer, pum.anamon_id, pum.country_coordinator_id, 
        pum.project_officer_id, pum.sector_coordinator_id, proj.projectmanager_id, prog.manager_id AS programme_manager_id
       FROM civicrm_case cc 
       JOIN civicrm_case_activity casact ON cc.id = casact.case_id
@@ -178,7 +178,7 @@ class CRM_Casereports_Upgrader extends CRM_Casereports_Upgrader_Base {
       LEFT JOIN civicrm_programme prog ON proj.programme_id = prog.id      
       LEFT JOIN civicrm_case_contact cascus ON cc.id = cascus.case_id
       LEFT JOIN civicrm_contact cus ON cascus.contact_id = cus.id
-      LEFT JOIN civicrm_address cusadr ON cus.id = cusadr.contact_id AND is_primary = %1
+      LEFT JOIN civicrm_address cusadr ON cus.id = cusadr.contact_id AND cusadr.is_primary = %1
       LEFT JOIN civicrm_country cuscntry ON cusadr.country_id = cuscntry.id
       LEFT JOIN civicrm_option_value ovsts ON cc.status_id = ovsts.value AND ovsts.option_group_id = %2
       LEFT JOIN civicrm_relationship reprel ON cc.id = reprel.case_id AND reprel.relationship_type_id = 

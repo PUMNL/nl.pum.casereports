@@ -325,23 +325,10 @@ class CRM_Casereports_Form_Report_ProjectIntake extends CRM_Report_Form {
   }
 
   /** 
-   * Method to get the country list for the user filter 
+   * Method to get the country list
    */
   private function setCountrySelectList() {
-    $config = CRM_Threepeas_Config::singleton();
-    $countryParams = array(
-      'contact_sub_type' => $config->countryContactType,
-      'contact_is_deleted' => 0,
-      'options' => array('limit' => 0),
-      'return' => 'display_name'
-    );
-    try {
-      $countryContacts = civicrm_api3('Contact', 'Get', $countryParams);
-      foreach ($countryContacts['values'] as $contactId => $contactValues) {
-        $this->_countrySelectList[$contactId] = $contactValues['display_name'];
-      }
-    } catch (CiviCRM_API3_Exception $ex) {}
-    asort($this->_countrySelectList);
+    $this->_countrySelectList = CRM_Core_PseudoConstant::country();
   }
 
   /** 

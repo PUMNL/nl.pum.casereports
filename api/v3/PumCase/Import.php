@@ -30,7 +30,10 @@ function civicrm_api3_pum_case_import($params)
     2 => array(0, 'Integer'));
   $caseDao = CRM_Core_DAO::executeQuery($caseQuery, $caseParams);
   while ($caseDao->fetch()) {
-    $import->importProjectIntake($caseDao->id);
+    // this was required for issue 3287
+    //$import->importProjectIntake($caseDao->id);
+    // this is required for issue 3498
+    $import->setCaseRelations($caseDao->id);
   }
   return civicrm_api3_create_success(array('Existing pum case data imported into civicrm_pum_case_reports'), $params, 'PumCase', 'Import');
 }

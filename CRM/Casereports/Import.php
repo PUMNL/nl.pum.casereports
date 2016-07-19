@@ -29,6 +29,11 @@ class CRM_Casereports_Import {
   public $_assessCCCustomColumn = NULL;
   public $_assessAnamonCustomColumn = NULL;
 
+  public $_anaRelTypeId = NULL;
+  public $_ccRelTypeId = NULL;
+  public $_scRelTypeId = NULL;
+  public $_poRelTypeId = NULL;
+
   /**
    * CRM_Casereports_Import constructor.
    */
@@ -59,7 +64,15 @@ class CRM_Casereports_Import {
     $this->_assessSCCustomColumn = $config->getAssessSCCustomColumn();
     $this->_assessCCCustomColumn = $config->getAssessCCCustomColumn();
     $this->_assessAnamonCustomColumn = $config->getAssessAnamonCustomColumn();
-  }
+
+    $this->_anaRelTypeId = civicrm_api3('RelationshipType', 'Getvalue',
+      array('name_a_b' => 'Anamon', 'return' => 'id'));
+    $this->_ccRelTypeId = civicrm_api3('RelationshipType', 'Getvalue',
+      array('name_a_b' => 'Country Coordinator is', 'return' => 'id'));
+    $this->_scRelTypeId = civicrm_api3('RelationshipType', 'Getvalue',
+      array('name_a_b' => 'Sector Coordinator', 'return' => 'id'));
+    $this->_poRelTypeId = civicrm_api3('RelationshipType', 'Getvalue',
+      array('name_a_b' => 'Project Officer for', 'return' => 'id'));  }
 
   /**
    * Method to import accept main activity proposal custom data for case_id
@@ -294,6 +307,68 @@ WHERE ca.case_id = %5 ORDER BY act.activity_date_time DESC";
       } else {
         $insert = "INSERT INTO civicrm_pum_case_reports SET case_id = %1";
         CRM_Core_DAO::executeQuery($insert, $pumParams);
+      }
+    }
+  }
+
+  /**
+   * Migratie voor issue 3498
+   * 
+   * @param $caseId
+   */
+  public function setCaseRelations($caseId) {
+    $query = 'SELECT contact_id_b FROM civicrm_relationship WHERE case_id = %1 AND relationship_type_id = %2 
+      AND is_active = %3 LIMIT 1';
+    $params[1] = array($caseId, 'Integer');
+    $params[2] = array($this->_anaRelTypeId, 'Integer');
+    $params[3] = array(1, 'Integer');
+    $index = 1;
+    $clauses = array();
+    $clauseParams = array();
+    $clauseParams[1] = array($caseId, 'Integer');
+    
+    $anamonId = CRM_Core_DAO::singleValueQuery($query, $params);
+    if (!empty($anamonId)) {
+      $index++;
+      $clauses[] = "anamon_id = %".$index;
+      $clauseParams[$index] = array($anamonId, 'Integer');
+    }
+
+    $params[2] = array($this->_ccRelTypeId, 'Integer');
+    $countryCoordinatorId = CRM_Core_DAO::singleValueQuery($query, $params);
+    if (!empty($countryCoordinatorId)) {
+      $index++;
+      $clauses[] = "country_coordinator_id = %".$index;
+      $clauseParams[$index] = array($countryCoordinatorId, 'Integer');
+    }
+
+    $params[2] = array($this->_scRelTypeId, 'Integer');
+    $sectorCoordinatorId = CRM_Core_DAO::singleValueQuery($query, $params);
+    if (!empty($sectorCoordinatorId)) {
+      $index++;
+      $clauses[] = "sector_coordinator_id = %".$index;
+      $clauseParams[$index] = array($sectorCoordinatorId, 'Integer');
+    }
+
+    $params[2] = array($this->_poRelTypeId, 'Integer');
+    $projectOfficerId = CRM_Core_DAO::singleValueQuery($query, $params);
+    if (!empty($projectOfficerId)) {
+      $index++;
+      $clauses[] = "project_officer_id = %".$index;
+      $clauseParams[$index] = array($projectOfficerId, 'Integer');
+    }
+    if (CRM_Casereports_Activity::caseExists($caseId)) {
+      if (!empty($clauses)) {
+        $update = "UPDATE civicrm_pum_case_reports SET " . implode(', ', $clauses) . " WHERE case_id = %1";
+        CRM_Core_DAO::executeQuery($update, $clauseParams);
+      }
+    } else {
+      if (!empty($clauses)) {
+        $insert = "INSERT INTO civicrm_pum_case_reports SET case_id = %1, " . implode(', ', $clauses);
+        CRM_Core_DAO::executeQuery($insert, $clauseParams);
+      } else {
+        $insert = "INSERT INTO civicrm_pum_case_reports SET case_id = %1";
+        CRM_Core_DAO::executeQuery($insert, $clauseParams);
       }
     }
   }

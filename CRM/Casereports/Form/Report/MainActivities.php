@@ -381,10 +381,6 @@ class CRM_Casereports_Form_Report_MainActivities extends CRM_Report_Form {
         $url = CRM_Utils_System::url("civicrm/contact/view" , "action=view&reset=1&cid=". $row['pum_main_expert_id'], $this->_absoluteUrl);
         $rows[$rowNum]['pum_main_expert_link'] = $url;
         $rows[$rowNum]['pum_main_expert_hover'] = ts("View Expert");
-        // issue 3555 als main_expert leeg, ook date cust_approves_expert niet laten zien
-        if (empty($row['pum_main_expert'])) {
-          $rows[$rowNum]['pum_cust_approves_expert'] = 'n/a';
-        }
       }
 
       if (CRM_Utils_Array::value('pum_main_representative', $rows[$rowNum])) {

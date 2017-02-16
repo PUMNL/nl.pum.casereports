@@ -176,63 +176,23 @@ class CRM_Casereports_Activity {
    * @static
    */
   private static function processAccept($objectRef) {
-    $approvalValues = self::buildApprovalValues($objectRef->id);
     if (self::caseExists($objectRef->case_id)) {
-      $query = 'UPDATE civicrm_pum_case_reports SET ma_expert_approval = %1, pq_approved_cc = %2, pq_approved_sc = %3
-        WHERE case_id = %4';
+      $query = 'UPDATE civicrm_pum_case_reports SET ma_expert_approval = %1
+        WHERE case_id = %2';
       $values = array(
         1 => array('Yes', 'String'),
-        2 => array($approvalValues['cc'], 'String'),
-        3 => array($approvalValues['sc'], 'String'),
-        4 => array($objectRef->case_id, 'Integer')
+        2 => array($objectRef->case_id, 'Integer')
       );
       CRM_Core_DAO::executeQuery($query, $values);
     } else {
-      $query = 'INSERT INTO civicrm_pum_case_reports (case_id, ma_expert_approval, pq_approved_cc, pq_approved_sc)
-        VALUES(%1, %2, %3, %4)';
+      $query = 'INSERT INTO civicrm_pum_case_reports (case_id, ma_expert_approval)
+        VALUES(%1, %2)';
       $values = array(
         1 => array($objectRef->case_id, 'Integer'),
         2 => array('Yes', 'String'),
-        3 => array($approvalValues['cc'], 'String'),
-        4 => array($approvalValues['sc'], 'String')
       );
       CRM_Core_DAO::executeQuery($query, $values);
     }
-  }
-
-  /**
-   * Method to retrieve custom fields cc and sc approval from custom group extending activity
-   * @param int $activityId
-   * @return array $approvalValues
-   */
-  private static function buildApprovalValues($activityId) {
-    $ccColumn = NULL;
-    $scColumn = NULL;
-    $approvalValues = array(
-      'cc' => "n/a",
-      'sc' => "n/a"
-    );
-    $config = CRM_Casereports_Config::singleton();
-    $customGroup = $config->getMaAcceptCustomGroup();
-    foreach ($customGroup['custom_fields'] as $customFieldId => $customField) {
-      if ($customField['name'] == "Assessment_CC") {
-        $ccColumn = $customField['column_name'];
-      }
-      if ($customField['name'] == "Assessment_SC") {
-        $scColumn = $customField['column_name'];
-      }
-    }
-    $query = "SELECT * FROM ".$customGroup['table_name']." WHERE entity_id = %1";
-    $dao = CRM_Core_DAO::executeQuery($query, array(1 => array($activityId, 'Integer')));
-    if ($dao->fetch()) {
-      if (!empty($ccColumn)) {
-        $approvalValues['cc'] = $dao->$ccColumn;
-      }
-      if (!empty($scColumn)) {
-        $approvalValues['sc'] = $dao->$scColumn;
-      }
-    }
-    return $approvalValues;
   }
 
   /**
@@ -244,7 +204,7 @@ class CRM_Casereports_Activity {
    */
   private static function processReject($caseId) {
     if (self::caseExists($caseId)) {
-      $query = 'UPDATE civicrm_pum_case_reports SET ma_expert_approval = %1, pq_approved_cc = NULL, pq_approved_sc = NULL
+      $query = 'UPDATE civicrm_pum_case_reports SET ma_expert_approval = %1
         WHERE case_id = %2';
       $values = array(
         1 => array('No', 'String'),
@@ -252,8 +212,8 @@ class CRM_Casereports_Activity {
       );
       CRM_Core_DAO::executeQuery($query, $values);
     } else {
-      $query = 'INSERT INTO civicrm_pum_case_reports (case_id, ma_expert_approval, pq_approved_cc, pq_approved_sc)
-        VALUES(%1, %2, NULL, NULL)';
+      $query = 'INSERT INTO civicrm_pum_case_reports (case_id, ma_expert_approval)
+        VALUES(%1, %2)';
       $values = array(
         1 => array($caseId, 'Integer'),
         2 => array('No', 'String')
@@ -354,8 +314,7 @@ class CRM_Casereports_Activity {
       $config = CRM_Casereports_Config::singleton();
       switch ($activity['activity_type_id']) {
         case $config->getMaAcceptActivityTypeId():
-          $update = "UPDATE civicrm_pum_case_reports SET ma_expert_approval = %1, pq_approved_cc = NULL,
-          pq_approved_sc = NULL WHERE case_id = %2";
+          $update = "UPDATE civicrm_pum_case_reports SET ma_expert_approval = %1 WHERE case_id = %2";
           CRM_Core_DAO::executeQuery($update, array(
             1 => array('n/a', 'String'),
             2 => array($caseId, 'Integer')));

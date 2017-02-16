@@ -110,18 +110,6 @@ class CRM_Casereports_Form_Report_MainActivities extends CRM_Report_Form {
                   'title' => ts('Expert approves Main. Act'),
                   'default' => TRUE
                 ),
-              'pq_approved_sc' =>
-                array(
-                  'name' => 'pq_approved_sc',
-                  'title' => ts('PQ approved by SC'),
-                  'default' => TRUE
-                ),
-              'pq_approved_cc' =>
-                array(
-                  'name' => 'pq_approved_cc',
-                  'title' => ts('PQ approved by CC'),
-                  'default' => TRUE
-                ),
               'cust_approves_expert' =>
                 array(
                   'name' => 'cust_approves_expert',

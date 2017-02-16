@@ -85,7 +85,7 @@ class CRM_Casereports_Upgrader extends CRM_Casereports_Upgrader_Base {
     $query = "CREATE OR REPLACE VIEW pum_my_main_activities AS
     SELECT cc.id AS case_id, cc.case_type_id, cc.subject,cc.status_id AS case_status_id, cont.display_name AS customer_name, cont.id AS customer_id,
     ma.start_date, ma.end_date, exp.display_name AS expert, exprel.contact_id_b AS expert_id, rep.display_name AS representative,
-    reprel.contact_id_b AS representative_id, pum.ma_expert_approval, pum.pq_approved_cc, pum.pq_approved_sc, pum.briefing_status,
+    reprel.contact_id_b AS representative_id, pum.ma_expert_approval, pum.briefing_status,
     pum.briefing_date, adr.street_address, adr.city, adr.postal_code, cntry.name AS country_name, ccrel.contact_id_b AS country_coordinator_id,
     porel.contact_id_b AS project_officer_id, pmrel.contact_id_b AS project_manager_id, screl.contact_id_b AS sector_coordinator_id,
     corel.contact_id_b AS counsellor_id, ca.do_you_think_the_expert_matches__78 AS cust_approves_expert,
@@ -436,6 +436,13 @@ class CRM_Casereports_Upgrader extends CRM_Casereports_Upgrader_Base {
   }
 
   public function upgrade_1032() {
+    $this->createViewMyMainActivities();
+    return true;
+  }
+
+  public function upgrade_1033() {
+    CRM_Core_DAO::executeQuery("ALTER TABLE civicrm_pum_case_reports DROP COLUMN pq_approved_cc");
+    CRM_Core_DAO::executeQuery("ALTER TABLE civicrm_pum_case_reports DROP COLUMN pq_approved_sc");
     $this->createViewMyMainActivities();
     return true;
   }

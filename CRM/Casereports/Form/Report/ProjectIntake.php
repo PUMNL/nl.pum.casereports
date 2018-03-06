@@ -343,4 +343,15 @@ class CRM_Casereports_Form_Report_ProjectIntake extends CRM_Report_Form {
     } catch (CiviCRM_API3_Exception $ex) {}
     asort($this->_caseStatusSelectList);
   }
+
+  /**
+   * Method to order the list by date
+   */
+  function orderBy() {
+    $this->_orderBy  = "";
+    $this->_orderByArray[] = $this->_aliases['projectintake'].".date_submission ASC";
+    if(!empty($this->_orderByArray) && !$this->_rollup == 'WITH ROLLUP'){
+      $this->_orderBy = "ORDER BY " . implode(', ', $this->_orderByArray);
+    }
+  }
 }

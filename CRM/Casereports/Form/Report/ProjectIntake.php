@@ -91,11 +91,11 @@ class CRM_Casereports_Form_Report_ProjectIntake extends CRM_Report_Form {
             'default' => TRUE,
             ),
           'assess_anamon_date' => array(
-            'title' => ts('Date Intake Anamon'),
+            'title' => ts('Date Intake PrOf'),
             'default' => TRUE,
             ),
           'assess_anamon_customer' => array(
-            'title' => ts('Customer Approved by Anamon'),
+            'title' => ts('Customer Approved by PrOf'),
             'default' => TRUE,
             ),
         ),
@@ -324,14 +324,14 @@ class CRM_Casereports_Form_Report_ProjectIntake extends CRM_Report_Form {
     }
   }
 
-  /** 
+  /**
    * Method to get the country list
    */
   private function setCountrySelectList() {
     $this->_countrySelectList = CRM_Core_PseudoConstant::country();
   }
 
-  /** 
+  /**
    * Method to get the case status list for the user filter
    */
   private function setCaseStatusSelectList() {

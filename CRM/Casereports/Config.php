@@ -19,12 +19,12 @@ class CRM_Casereports_Config {
   protected $_maRejectActivityTypeId = NULL;
   protected $_maBriefingActivityTypeId = NULL;
   protected $_maAcceptCustomGroup = array();
-  
+
   // properties for project intake
   protected $_assessRepActivityTypeId = NULL;
   protected $_assessCCActivityTypeId = NULL;
   protected $_assessSCActivityTypeId = NULL;
-  protected $_assessAnamonActivityTypeId = NULL;
+  protected $_assessPrOfActivityTypeId = NULL;
   protected $_assessRepCustomGroupId = NULL;
   protected $_assessRepCustomTable = NULL;
   protected $_assessCCCustomTable = NULL;
@@ -46,7 +46,7 @@ class CRM_Casereports_Config {
       '_assessRepActivityTypeId' => 'Assessment Project Request by Rep',
       '_assessCCActivityTypeId' => 'Intake Customer by CC',
       '_assessSCActivityTypeId' => 'Intake Customer by SC',
-      '_assessAnamonActivityTypeId' => 'Intake Customer by Anamon',
+      '_assessPrOfActivityTypeId' => 'Intake Customer by PrOf',
     ));
     $this->setCustomGroups(array(
       '_maAcceptCustomGroup' => 'Add_Keyqualifications',
@@ -163,7 +163,7 @@ class CRM_Casereports_Config {
   public function getAssessCCActivityTypeId() {
     return $this->_assessCCActivityTypeId;
   }
-  
+
   /**
    * Getter for Assessment Project Intake by SC
    *
@@ -173,15 +173,15 @@ class CRM_Casereports_Config {
   public function getAssessSCActivityTypeId() {
     return $this->_assessSCActivityTypeId;
   }
-  
+
   /**
    * Getter for Assessment Project Intake by SC
    *
    * @return array
    * @access public
    */
-  public function getAssessAnamonActivityTypeId() {
-    return $this->_assessAnamonActivityTypeId;
+  public function getAssessPrOfActivityTypeId() {
+    return $this->_assessPrOfActivityTypeId;
   }
 
   /**

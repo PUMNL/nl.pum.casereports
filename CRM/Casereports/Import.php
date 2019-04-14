@@ -19,7 +19,7 @@ class CRM_Casereports_Import {
   public $_assessRepActivityTypeId = NULL;
   public $_assessCCActivityTypeId = NULL;
   public $_assessSCActivityTypeId = NULL;
-  public $_assessAnamonActivityTypeId = NULL;
+  public $_assessPrOfActivityTypeId = NULL;
   public $_assessRepCustomTable = NULL;
   public $_assessSCCustomTable = NULL;
   public $_assessCCCustomTable = NULL;
@@ -55,7 +55,7 @@ class CRM_Casereports_Import {
     $this->_assessRepActivityTypeId = $config->getAssessRepActivityTypeId();
     $this->_assessSCActivityTypeId = $config->getAssessSCActivityTypeId();
     $this->_assessCCActivityTypeId = $config->getAssessCCActivityTypeId();
-    $this->_assessAnamonActivityTypeId = $config->getAssessAnamonActivityTypeId();
+    $this->_assessPrOfActivityTypeId = $config->getAssessPrOfActivityTypeId();
     $this->_assessRepCustomTable = $config->getAssessRepCustomTable();
     $this->_assessSCCustomTable = $config->getAssessSCCustomTable();
     $this->_assessCCCustomTable = $config->getAssessCCCustomTable();
@@ -190,13 +190,13 @@ class CRM_Casereports_Import {
     // get relevant activities
     $actQuery = "SELECT act.id, act.activity_date_time, act.activity_type_id
 FROM civicrm_case_activity ca JOIN civicrm_activity act ON ca.activity_id = act.id AND act.is_current_revision = %6
- AND act.is_test = %7 AND act.is_deleted = %7 AND act.activity_type_id IN (%1, %2, %3, %4) 
+ AND act.is_test = %7 AND act.is_deleted = %7 AND act.activity_type_id IN (%1, %2, %3, %4)
 WHERE ca.case_id = %5 ORDER BY act.activity_date_time DESC";
     $actParams = array(
       1 => array($this->_assessSCActivityTypeId, 'Integer'),
       2 => array($this->_assessRepActivityTypeId, 'Integer'),
       3 => array($this->_assessCCActivityTypeId, 'Integer'),
-      4 => array($this->_assessAnamonActivityTypeId, 'Integer'),
+      4 => array($this->_assessPrOfActivityTypeId, 'Integer'),
       5 => array($caseId, 'Integer'),
       6 => array(1, 'Integer'),
       7 => array(0, 'Integer'));
@@ -267,7 +267,7 @@ WHERE ca.case_id = %5 ORDER BY act.activity_date_time DESC";
           }
           break;
         // anamon
-        case $this->_assessAnamonActivityTypeId:
+        case $this->_assessPrOfActivityTypeId:
           if (!empty($actDao->activity_date_time) && !$gotAnamonDate) {
             $gotAnamonDate = TRUE;
             $pumIndex++;
@@ -303,11 +303,11 @@ WHERE ca.case_id = %5 ORDER BY act.activity_date_time DESC";
 
   /**
    * Migratie voor issue 3498
-   * 
+   *
    * @param $caseId
    */
   public function setCaseRelations($caseId) {
-    $query = 'SELECT contact_id_b FROM civicrm_relationship WHERE case_id = %1 AND relationship_type_id = %2 
+    $query = 'SELECT contact_id_b FROM civicrm_relationship WHERE case_id = %1 AND relationship_type_id = %2
       AND is_active = %3 LIMIT 1';
     $params[1] = array($caseId, 'Integer');
     $params[2] = array($this->_anaRelTypeId, 'Integer');
@@ -316,7 +316,7 @@ WHERE ca.case_id = %5 ORDER BY act.activity_date_time DESC";
     $clauses = array();
     $clauseParams = array();
     $clauseParams[1] = array($caseId, 'Integer');
-    
+
     $anamonId = CRM_Core_DAO::singleValueQuery($query, $params);
     if (!empty($anamonId)) {
       $index++;

@@ -45,7 +45,7 @@ class CRM_Casereports_Activity {
         case $config->getAssessSCActivityTypeId():
           self::processAssessData('assess_sc', $objectId, $objectRef);
           break;
-        case $config->getAssessAnamonActivityTypeId():
+        case $config->getAssessPrOfActivityTypeId():
           self::processAssessData('assess_anamon', $objectId, $objectRef);
           break;
       }
@@ -335,12 +335,12 @@ class CRM_Casereports_Activity {
           $update = "UPDATE civicrm_pum_case_reports SET assess_sc_date = NULL, assess_sc_customer = NULL WHERE case_id = %1";
           CRM_Core_DAO::executeQuery($update, array(1 => array($caseId, 'Integer')));
           break;
-        case $config->getAssessAnamonActivityTypeId():
+        case $config->getAssessPrOfActivityTypeId():
           $update = "UPDATE civicrm_pum_case_reports SET assess_anamon_date = NULL, assess_anamon_customer = NULL WHERE case_id = %1";
           CRM_Core_DAO::executeQuery($update, array(1 => array($caseId, 'Integer')));
           break;
       }
-          
+
     } catch (CiviCRM_API3_Exception $ex) {}
   }
 }

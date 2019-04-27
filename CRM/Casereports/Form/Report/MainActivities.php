@@ -195,12 +195,17 @@ class CRM_Casereports_Form_Report_MainActivities extends CRM_Report_Form {
   function select() {
     $select = array();
     $this->_columnHeaders = array();
+
     foreach ($this->_columns as $tableName => $table) {
       if (array_key_exists('fields', $table)) {
         foreach ($table['fields'] as $fieldName => $field) {
           if (CRM_Utils_Array::value('required', $field) ||
             CRM_Utils_Array::value($fieldName, $this->_params['fields'])) {
-            $select[] = "{$field['dbAlias']} as {$tableName}_{$fieldName}";
+            if($fieldName == 'case_id'){
+              $select[] = "DISTINCT {$field['dbAlias']} as {$tableName}_{$fieldName}";
+            } else {
+              $select[] = "{$field['dbAlias']} as {$tableName}_{$fieldName}";
+            }
             $this->_columnHeaders["{$tableName}_{$fieldName}"]['type'] = CRM_Utils_Array::value('type', $field);
             if (isset($field['title'])) {
               $this->_columnHeaders["{$tableName}_{$fieldName}"]['title'] = $field['title'];
@@ -264,7 +269,7 @@ class CRM_Casereports_Form_Report_MainActivities extends CRM_Report_Form {
                 $clause = "({$pum}.expert_id = {$value} OR {$pum}.representative_id = {$value}
                 OR {$pum}.country_coordinator_id = {$value} OR {$pum}.project_officer_id = {$value}
                 OR {$pum}.project_manager_id = {$value} OR {$pum}.sector_coordinator_id = {$value}
-                OR {$pum}.counsellor_id = {$value} OR {$pum}.grant_coordinator_id = {$value} 
+                OR {$pum}.counsellor_id = {$value} OR {$pum}.grant_coordinator_id = {$value}
                 OR {$pum}.anamon_id = {$value})";
               }
               $op = NULL;

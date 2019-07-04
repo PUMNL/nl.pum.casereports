@@ -292,9 +292,9 @@ class CRM_Casereports_Form_Report_MainActivities extends CRM_Report_Form {
       }
     }
     if (empty($clauses)) {
-      $this->_where = "WHERE ( 1 ) ";
+      $this->_where = "WHERE ( 1 ) ".' GROUP BY _civireport.case_id';
     } else {
-      $this->_where = "WHERE " . implode(' AND ', $clauses);
+      $this->_where = "WHERE " . implode(' AND ', $clauses).' GROUP BY _civireport.case_id';
     }
   }
 
@@ -412,8 +412,9 @@ class CRM_Casereports_Form_Report_MainActivities extends CRM_Report_Form {
    */
   function setPager($rowCount = self::ROW_COUNT_LIMIT) {
     if ($this->_limit && ($this->_limit != '')) {
-      $sql              = "SELECT COUNT(DISTINCT({$this->_aliases['pum_main']}.case_id)) ".$this->_from." ".$this->_where;
+      $sql              = "SELECT COUNT(*) FROM(SELECT DISTINCT _civireport.case_id ".$this->_from." ".$this->_where.") count";
       $this->_rowsFound = CRM_Core_DAO::singleValueQuery($sql);
+
       $params           = array(
         'total' => $this->_rowsFound,
         'rowCount' => $rowCount,

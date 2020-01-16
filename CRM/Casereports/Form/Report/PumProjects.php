@@ -79,10 +79,6 @@ class CRM_Casereports_Form_Report_PumProjects extends CRM_Report_Form {
             'no_display' => TRUE,
             'required' => TRUE,
           ),
-          'anamon_id' => array(
-            'no_display' => TRUE,
-            'required' => TRUE,
-          ),
           'country_coordinator_id' => array(
             'no_display' => TRUE,
             'required' => TRUE,
@@ -177,7 +173,7 @@ class CRM_Casereports_Form_Report_PumProjects extends CRM_Report_Form {
               $value = $this->_userId;
               if (!empty($value)) {
                 $pum = $this->_aliases['project'];
-                $clause = "({$pum}.anamon_id = {$value} OR {$pum}.programme_manager_id = {$value}
+                $clause = "({$pum}.programme_manager_id = {$value}
                 OR {$pum}.country_coordinator_id = {$value} OR {$pum}.project_officer_id = {$value}
                 OR {$pum}.projectmanager_id = {$value} OR {$pum}.sector_coordinator_id = {$value})";
               }
@@ -339,8 +335,8 @@ class CRM_Casereports_Form_Report_PumProjects extends CRM_Report_Form {
     }
   }
 
-  /** 
-   * Method to get the country list for the user filter 
+  /**
+   * Method to get the country list for the user filter
    */
   private function setCountrySelectList() {
     $config = CRM_Threepeas_Config::singleton();
@@ -358,8 +354,8 @@ class CRM_Casereports_Form_Report_PumProjects extends CRM_Report_Form {
     } catch (CiviCRM_API3_Exception $ex) {}
   }
 
-  /** 
-   * Method to get the customer list for the user filter 
+  /**
+   * Method to get the customer list for the user filter
    */
   private function setCustomerSelectList() {
     $config = CRM_Threepeas_Config::singleton();
@@ -385,9 +381,6 @@ class CRM_Casereports_Form_Report_PumProjects extends CRM_Report_Form {
    */
   private function setMyRole($row) {
     $myRoles = array();
-    if ($row['project_anamon_id'] == $this->_userId) {
-      $myRoles[] = "Anamon";
-    }
     if ($row['project_country_coordinator_id'] == $this->_userId) {
       $myRoles[] = "Country Coordinator";
     }
@@ -420,7 +413,7 @@ class CRM_Casereports_Form_Report_PumProjects extends CRM_Report_Form {
 
   /**
    * Set report url as user context
-   * 
+   *
    */
   private function setReportUserContext() {
     $session = CRM_Core_Session::singleton();

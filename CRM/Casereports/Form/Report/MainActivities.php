@@ -398,9 +398,12 @@ class CRM_Casereports_Form_Report_MainActivities extends CRM_Report_Form {
     if (method_exists('CRM_Groupsforreports_GroupReport', 'getGroupMembersForReport')) {
       $allContacts = CRM_Groupsforreports_GroupReport::getGroupMembersForReport(__CLASS__);
       $sortedContacts = array();
-      foreach ($allContacts as $contact) {
-        $sortedContacts[$contact] = CRM_Threepeas_Utils::getContactName($contact);
+      $allContactsString = implode(', ', array_keys($allContacts));
+      $dao = CRM_Core_DAO::executeQuery("SELECT id, display_name FROM civicrm_contact WHERE id IN (".$allContactsString.")");
+      while($dao->fetch()){
+        $sortedContacts[$dao->id] = $dao->display_name;
       }
+
       asort($sortedContacts);
       $this->_userSelectList = array(0 => 'current user') + $sortedContacts;
     }
